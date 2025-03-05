@@ -1,3 +1,4 @@
 #OPENAI_API_KEY,SUPABASE_URL,SUPABASE_KEY,CURRENT_USER_ID
 config.py
+#venvの設定
 venv
