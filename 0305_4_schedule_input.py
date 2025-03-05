@@ -10,7 +10,7 @@ from supabase import create_client, Client
 
 
 # =========================
-# 1. 設定ss
+# 1. 設定test
 # =========================
 # Supabaseクライアントの初期化
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
