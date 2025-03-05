@@ -2,7 +2,7 @@
 config.py
 #venvの設定
 venv
-# Python bytecode
-__pycache__
 
+# Python bytecode
+__pycache__/
 *.pyc
