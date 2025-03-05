@@ -3,5 +3,6 @@ config.py
 #venvの設定
 venv
 # Python bytecode
-__pycache__/
+__pycache__
+
 *.pyc
