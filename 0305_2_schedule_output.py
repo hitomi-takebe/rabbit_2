@@ -9,7 +9,7 @@ import speech_recognition as sr
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID
 from supabase import create_client, Client
 
-#supabaseできたかな
+#supabaseできたかなmouissyo
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ChatOpenAI（LangChain）クライアントの初期化
