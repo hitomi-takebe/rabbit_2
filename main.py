@@ -36,7 +36,7 @@ def speak(text: str):
 # =========================
 # 音声入力関数
 # =========================
-def recognize_speech(timeout_seconds=180) -> str:
+def recognize_speech(timeout_seconds=120) -> str:
     """
     マイクから音声を取得し、日本語で認識して文字列を返す。
     timeout_seconds: 録音の上限秒数
@@ -63,65 +63,95 @@ def recognize_speech(timeout_seconds=180) -> str:
 
 
 # =========================
-# タスク登録関連
+# ユーザーの意図を判定する関数
 # =========================
 def extract_intent_info(input_text: str) -> str:
     """
-    FEW-SHOTプロンプトを使い、入力文章が「タスク登録かどうか」を判定。
-    - "TaskRegistration" or "Others" を返す。
+    FEW-SHOTプロンプトを使い、ユーザーの発話を意図ごとに分類する。
+    意図の種類：
+    - "TaskRegistration" → ユーザーがタスクを登録したい場合
+    - "SiriChat" → ユーザーが「Hi Siri」と話しかけた場合
+    - "Silent" → 無音または認識できなかった場合
 
-    *Pythonのフォーマット文字列と衝突しないよう、JSONの { } は {{ }} でエスケープ。
+    出力は JSON 形式:
+    {
+      "intent": "TaskRegistration"  // または "SiriChat", "Silent"
+    }
     """
-    few_shot_prompt = """
-あなたはユーザーの文章を読み取り、その意図を判断するアシスタントです。
-可能な意図は以下の2つのみです:
-1. TaskRegistration: ユーザーがタスクを登録しようとしている
-2. Others: タスク登録とは無関係な内容
 
-出力は以下の形式のJSON:
+    few_shot_prompt = """
+あなたは音声アシスタントです。ユーザーの発話を聞き、その意図を以下の3つのカテゴリのいずれかに分類してください。
+
+1. **TaskRegistration**: ユーザーがタスクを登録したい（例：「タスクを登録」「タスク追加」など）
+2. **SiriChat**: ユーザーが「Hi Siri」と話しかけた（例：「Hi Siri」「Hey Siri」など）
+3. **Silent**: ユーザーが無言だった、または認識できなかった
+
+出力は次の JSON 形式で行ってください：
 {{
-  "intent": "TaskRegistration"  // または "Others"
+  "intent": "<TaskRegistration | SiriChat | Silent>"
 }}
 
 === FEW-SHOT EXAMPLES ===
 
 [Example 1]
-User: "タスクを登録したいんだけど"
+User: "タスクを登録したい"
 Assistant:
 {{
   "intent": "TaskRegistration"
 }}
 
 [Example 2]
-User: "今日はいい天気ですね"
+User: "Hi Siri"
 Assistant:
 {{
-  "intent": "Others"
+  "intent": "SiriChat"
+}}
+
+[Example 3]
+User: "Hey Siri、今日の天気は？"
+Assistant:
+{{
+  "intent": "SiriChat"
+}}
+
+[Example 4]
+User: ""
+Assistant:
+{{
+  "intent": "Silent"
+}}
+
+[Example 5]
+User: "（ノイズや無音）"
+Assistant:
+{{
+  "intent": "Silent"
 }}
 
 === END OF EXAMPLES ===
 
-以下の文章: 「{input_text}」
-を判定し、必ず上記JSON形式のみで答えてください。
+以下の発話：「{input_text}」  
+この発話の意図を判定し、必ず **JSON形式** で答えてください。
 """
+    
+    # プロンプトを構築
     prompt_template = PromptTemplate(
         input_variables=["input_text"],
         template=few_shot_prompt
     )
     final_prompt = prompt_template.format(input_text=input_text)
 
+    # OpenAI API にリクエスト
     response = chat_model.invoke(final_prompt)
 
     # JSON解析
     try:
         result = json.loads(response.content.strip())
-        intent = result.get("intent", "Others")
-        if intent in ["TaskRegistration", "Others"]:
-            return intent
-        return "Others"
+        intent = result.get("intent", "Silent")  # デフォルトは Silent
+        return intent if intent in ["TaskRegistration", "SiriChat", "Silent"] else "Silent"
     except (json.JSONDecodeError, AttributeError):
         print("intent解析に失敗しました。レスポンス:", response.content)
-        return "Others"
+        return "Silent"
 
 
 def always_on_loop():
@@ -188,10 +218,9 @@ def schedule_notifications():
         print(f"毎日 {hour:02d}:{minute:02d} に『{title}』を通知")
 
 def run_scheduler():
-    """
-    スケジューラを走らせ続ける。
-    30秒ごとに schedule.run_pending() を実行して、タスクリマインドをチェックする。
-    """
+    """ タスク通知モード """
+    speak("タスク通知を開始します。")
+    print("タスク通知を開始します。")
     # schedule_notifications()  # タスクごとにリマインドスケジュールを設定
     while True:
         schedule_notifications()  # 🔥 最新のタスクを取得しスケジュール更新
@@ -350,7 +379,7 @@ def insert_task():
     タスクの詳細を音声で取得 → OpenAIで解析 → SupabaseのDBにINSERT
     """
     speak("タスクの詳細を話してください。（例:『17時15分にお風呂に入る』など）")  # プロンプトを音声で伝える
-    text_for_task = recognize_speech(timeout_seconds=180)  # ここでは数値のみを渡す
+    text_for_task = recognize_speech(timeout_seconds=120)  # ここでは数値のみを渡す
 
     if not text_for_task:
         speak("うまく聞き取れませんでした。タスク登録を中断します。")
@@ -386,15 +415,40 @@ def insert_task():
         speak("タスク登録の途中でエラーが発生しました。")
 
 # =========================
+# Siri風雑談モード
+# =========================
+def siri_chat():
+    """ Siri風の雑談モード """
+    speak("Siriモードです。何かお話ししますか？")
+
+# =========================
+# メインのループ
+# =========================
+def main_loop():
+    """
+    120秒ごとに音声認識を行い、3つのモードに分岐する：
+    - TaskRegistration: タスク登録モード
+    - SiriChat: Siri風の雑談モード
+    - Silent: タスク通知モード
+    """
+    while True:
+        user_text = recognize_speech(timeout_seconds=120)
+
+        intent = extract_intent_info(user_text)
+        print(f"推定Intent: {intent}")
+
+        if intent == "TaskRegistration":
+            insert_task()  # タスク登録モード
+        elif intent == "SiriChat":
+            siri_chat()  # Siri風雑談モード
+        else:
+            run_scheduler()  # タスク通知モード
+
+        time.sleep(120)  # 120秒待機
+
+
+# =========================
 # メイン実行
 # =========================
 if __name__ == "__main__":
-    import threading
-
-    # 🔥 スケジューラーを別スレッドで実行（定期的にタスクを更新）
-    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.start()
-
-
-    # 音声認識のループも開始
-    always_on_loop()
+    main_loop()
