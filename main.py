@@ -8,6 +8,7 @@ import os
 import speech_recognition as sr
 import json
 from langchain.prompts import PromptTemplate
+import threading
 
 
 # 設定情報をconfig.pyからインポート
@@ -27,11 +28,15 @@ engine = pyttsx3.init()
 # =========================
 # 音声合成 (TTS) 関数
 # =========================
-def speak(text: str):
-    """指定したテキストを音声で読み上げる"""
-    engine.say(text)
-    engine.runAndWait()
+# 🔥 スレッドセーフなロックを作成
+speech_lock = threading.Lock()
 
+def speak(text: str):
+    """指定したテキストを音声で読み上げる（スレッドセーフ）"""
+    with speech_lock:  # 🔥 他のスレッドと競合しないようにロック
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
 
 # =========================
 # 音声入力関数
@@ -67,7 +72,7 @@ def recognize_speech(timeout_seconds=120) -> str:
 # =========================
 def extract_intent_info(input_text: str) -> str:
     """
-    FEW-SHOTプロンプトを使い、ユーザーの発話を意図ごとに分類する。
+    FEW-SHOTプロンプトを使い、ユーザーの発話を3つのカテゴリに分類する。
     意図の種類：
     - "TaskRegistration" → ユーザーがタスクを登録したい場合
     - "SiriChat" → ユーザーが「Hi Siri」と話しかけた場合
@@ -114,15 +119,15 @@ Assistant:
   "intent": "SiriChat"
 }}
 
-[Example 4]
-User: ""
+[Example 6]
+User: "今日はいい天気ですね"
 Assistant:
 {{
   "intent": "Silent"
 }}
 
-[Example 5]
-User: "（ノイズや無音）"
+[Example 7]
+User: "お腹すいた"
 Assistant:
 {{
   "intent": "Silent"
@@ -147,11 +152,12 @@ Assistant:
     # JSON解析
     try:
         result = json.loads(response.content.strip())
-        intent = result.get("intent", "Silent")  # デフォルトは Silent
-        return intent if intent in ["TaskRegistration", "SiriChat", "Silent"] else "Silent"
+        intent = result.get("intent", "Silent")  # デフォルトを "Silent" に設定
+        return intent if intent in ["TaskRegistration", "SiriChat"] else "Silent"
     except (json.JSONDecodeError, AttributeError):
         print("intent解析に失敗しました。レスポンス:", response.content)
         return "Silent"
+
 
 
 def always_on_loop():
@@ -219,7 +225,6 @@ def schedule_notifications():
 
 def run_scheduler():
     """ タスク通知モード """
-    speak("タスク通知を開始します。")
     print("タスク通知を開始します。")
     # schedule_notifications()  # タスクごとにリマインドスケジュールを設定
     while True:
@@ -424,27 +429,44 @@ def siri_chat():
 # =========================
 # メインのループ
 # =========================
-def main_loop():
-    """
-    120秒ごとに音声認識を行い、3つのモードに分岐する：
-    - TaskRegistration: タスク登録モード
-    - SiriChat: Siri風の雑談モード
-    - Silent: タスク通知モード
-    """
+import threading
+
+def background_listen():
+    """ 音声認識を別スレッドで実行する """
     while True:
-        user_text = recognize_speech(timeout_seconds=120)
+        user_text = recognize_speech(timeout_seconds=5)  # 5秒ごとに音声認識
+        if user_text:
+            process_user_input(user_text)
 
-        intent = extract_intent_info(user_text)
-        print(f"推定Intent: {intent}")
+def process_user_input(user_text):
+    """ 音声認識の結果を処理し、適切なモードを実行 """
+    intent = extract_intent_info(user_text)
+    print(f"推定Intent: {intent}")
 
-        if intent == "TaskRegistration":
-            insert_task()  # タスク登録モード
-        elif intent == "SiriChat":
-            siri_chat()  # Siri風雑談モード
-        else:
-            run_scheduler()  # タスク通知モード
+    if intent == "TaskRegistration":
+        insert_task()  # タスク登録モード
+    elif intent == "SiriChat":
+        siri_chat()  # Siri風雑談モード
+    else:
+        print("無効な発話。何もしません。")
 
-        time.sleep(120)  # 120秒待機
+def main_loop():
+    """ タスク通知を最優先しながら、音声認識を非同期で待機 """
+    # 🎤 **音声認識をバックグラウンドスレッドで開始**
+    listen_thread = threading.Thread(target=background_listen, daemon=True)
+    listen_thread.start()
+
+    while True:
+        tasks = fetch_tasks()  # 🔥 最新のタスクを取得
+        current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
+        # 🚀 **タスク通知がある場合、最優先で実行**
+        for task in tasks:
+            if task["scheduled_time"] == current_time:
+                notify_and_wait_for_completion(task)
+                break  # 1回のループで1つのタスクのみ通知する
+
+        time.sleep(1)  # 無駄なCPU負荷を避ける
 
 
 # =========================
