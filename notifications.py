@@ -1,12 +1,17 @@
 # notifications.py
+
+import json
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
 import datetime
 import time
 from audio import speak, recognize_speech
-from config import CURRENT_USER_ID, supabase
 # 設定情報をconfig.pyからインポート
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
 
+# ChatOpenAI クライアントの初期化
+chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
 
 def fetch_tasks():
     """
@@ -14,6 +19,45 @@ def fetch_tasks():
     """
     response = supabase.table("tasks").select("*").eq("recurrence", "everyday").eq("user_id", CURRENT_USER_ID).execute()
     return response.data if response.data else []
+
+def confirm_completion(user_text: str) -> bool:
+    """
+    FEW-SHOT プロンプトを用いて、ユーザーの発話がタスク完了の通知であるかを判定する関数。
+    返答は "Completed" または "NotCompleted" の単語のみで出力してください。
+
+    例:
+    入力: "完了しました"
+    出力: Completed
+
+    入力: "まだです"
+    出力: NotCompleted
+    """
+    few_shot_prompt = """
+あなたはタスク管理アシスタントです。以下のルールに従って、ユーザーの発話がタスク完了を意味するか判定してください。
+- タスク完了を意味する場合は "Completed" と出力してください。
+- それ以外の場合は "NotCompleted" と出力してください。
+
+例:
+入力: "完了しました"、 "終わったよ"、 "完了したよ"、 "できたよ"、"やったよ"、"終わりました"
+出力: Completed
+
+
+入力: "まだです"、 ”まだだよ”、 ”いや”、 ”やりたくない”、 ”むり”
+出力: NotCompleted
+
+以下のユーザー発話: "{input_text}"
+この発話の意図を判定し、**JSON形式** で答えてください。
+"""
+    prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
+    final_prompt = prompt_template.format(input_text=user_text)
+    response = chat_model.invoke(final_prompt)
+    # 余計なバッククォートや空白、複数行があれば最初の行を抽出
+    output = response.content.strip().strip("```").strip().splitlines()[0].strip()
+    print(f"認識した完了判定応答: '{output}'")  # デバッグ用
+    if output == "Completed":
+        return True
+    else:
+        return False
 
 def notify_and_wait_for_completion(task: dict):
     """
@@ -27,7 +71,9 @@ def notify_and_wait_for_completion(task: dict):
     print(f"[通知] 毎日 {scheduled_time} に {title} の時間です。")
     speak("完了したら『完了したよ』などと言ってください。")
     user_input = recognize_speech(timeout_seconds=180)
-    if any(keyword in user_input for keyword in ["完了", "やった", "できた", "done"]):
+    print(f"認識結果: '{user_input}'")  # 取得された発話の確認
+
+    if confirm_completion(user_input):
         mark_task_completed(task_id)
     else:
         print("完了ワードが検出されませんでした。")

@@ -18,12 +18,12 @@ def process_user_input(user_text):
     音声認識結果から意図を判定し、対応する機能を呼び出す関数。
     
     分岐:
-      - TaskRegistration: タスク登録機能 (task_registration.py) を呼び出す
-      - SiriChat: 雑談機能 (siri_chat.py) を呼び出す
-      - Silent: 発言がなかった場合は何もしない
+    - TaskRegistration: タスク登録機能 (task_registration.py) を呼び出す
+    - SiriChat: 雑談機能 (siri_chat.py) を呼び出す
+    - Silent: 発言がなかった場合は何もしない
     """
     intent = extract_intent_info(user_text)
-    print(f"推定Intent: {intent}")
+    print(f"認識Intent: {intent}")
     
     if intent == "TaskRegistration":
         insert_task()
@@ -62,12 +62,12 @@ def process_notification_queue():
 def main_loop():
     """
     メインループ:
-      ① 音声入力を短いタイムアウト（3秒）でチェックし、あれば優先的に処理する。
-      ② 音声入力処理が終わったら、キューに保管されているタスク通知を処理する。
+    ① 音声入力を短いタイムアウト（5秒）でチェックし、あれば優先的に処理する。
+    ② 音声入力処理が終わったら、キューに保管されているタスク通知を処理する。
     """
     while True:
         # ① 音声入力のチェック
-        user_text = recognize_speech(timeout_seconds=3)
+        user_text = recognize_speech(timeout_seconds=5)
         if user_text:
             process_user_input(user_text)
         
