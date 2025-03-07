@@ -28,7 +28,7 @@ def extract_intent_info(input_text: str) -> str:
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー: 「Siri タスクを登録する」
+ユーザー: 「Hi Siri！ タスクを登録する」
 出力:
 {{
   "intent": "TaskRegistration"
