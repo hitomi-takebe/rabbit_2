@@ -3,37 +3,70 @@ import json
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from config import OPENAI_API_KEY
-# 設定情報をconfig.pyからインポート
-from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
-# ChatOpenAIクライアントの初期化（共通で利用）
+# ChatOpenAIクライアントの初期化（config.py の OPENAI_API_KEY を使用）
 chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
 
 def extract_intent_info(input_text: str) -> str:
     """
-    FEW-SHOTプロンプトを用いて、ユーザーの発話から意図を判定する。
-    出力は "TaskRegistration" または "SiriChat" のどちらかとする。
+    FEW-SHOTプロンプトを用いて、ユーザーの発話から意図を判定する関数。
+
+    システムのフロー:
+      - 発言がない場合 → notifications.py (Silent)
+      - 「Hi Siri！タスクを登録する」と発言 → task_registration.py (TaskRegistration)
+      - 「Hi Siri！」とだけ発言 → siri_chat.py (SiriChat)
+
+    出力は以下のJSON形式で返してください:
+      {{"intent": "<Silent | TaskRegistration | SiriChat>"}}
     """
     few_shot_prompt = """
-あなたは音声アシスタントです。ユーザーの発話を聞き、その意図を以下の2つのカテゴリに分類してください。
+あなたは音声アシスタントです。起動直後のシステムは次のフローで動作します:
 
-1. TaskRegistration: ユーザーがタスクを登録したい場合（例：「タスクを登録したい」）
-2. SiriChat: ユーザーが雑談をしたい場合（例：「Hi Siri」）
+- ユーザーが何も発言しなかった場合は通知機能（notifications.py）を実行します。
+- ユーザーが「Hi Siri！タスクを登録する」と発言した場合はタスク登録機能（task_registration.py）を実行します。
+- ユーザーが「Hi Siri！」とだけ発言した場合は雑談機能（siri_chat.py）を実行します。
 
-出力は次の JSON 形式でお願いします：
+入力されたユーザー発話に基づき、以下の形式のJSONのみを出力してください:
+{{"intent": "<Silent | TaskRegistration | SiriChat>"}}
+
+=== FEW-SHOT EXAMPLES ===
+
+[例1]
+ユーザー: 「Hi Siri！タスクを登録する」
+出力:
 {{
-  "intent": "<TaskRegistration | SiriChat>"
+  "intent": "TaskRegistration"
 }}
 
-以下の発話：「{input_text}」
+[例2]
+ユーザー: 「Hi Siri！」
+出力:
+{{
+  "intent": "SiriChat"
+}}
+
+[例3]
+ユーザー: （発言なし）
+出力:
+{{
+  "intent": "Silent"
+}}
+
+=== END OF EXAMPLES ===
+
+以下のユーザー発話: 「{input_text}」
 """
+    # PromptTemplate に、input_text プレースホルダーを埋め込む
     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
     final_prompt = prompt_template.format(input_text=input_text)
     response = chat_model.invoke(final_prompt)
     try:
         result = json.loads(response.content.strip())
-        intent = result.get("intent", "SiriChat")
-        return intent if intent in ["TaskRegistration", "SiriChat"] else "SiriChat"
+        intent = result.get("intent", "Silent")
+        if intent in ["Silent", "TaskRegistration", "SiriChat"]:
+            return intent
+        return "Silent"
     except (json.JSONDecodeError, AttributeError):
-        print("intent解析に失敗しました。レスポンス:", response.content)
-        return "SiriChat"
+        print("意図解析に失敗しました。レスポンス:", response.content)
+        return "Silent"
+
