@@ -1,11 +1,7 @@
 # intent.py
 import json
 from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
-from config import OPENAI_API_KEY
-
-# ChatOpenAIクライアントの初期化（config.py の OPENAI_API_KEY を使用）
-chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
+from config import chat_model
 
 def extract_intent_info(input_text: str) -> str:
     """
@@ -32,7 +28,7 @@ def extract_intent_info(input_text: str) -> str:
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー: 「Hi Siri タスクを登録する」
+ユーザー: 「Siri タスクを登録する」
 出力:
 {{
   "intent": "TaskRegistration"

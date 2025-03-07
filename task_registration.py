@@ -5,9 +5,8 @@ from langchain_openai import ChatOpenAI
 from audio import speak, recognize_speech
 from config import CURRENT_USER_ID, supabase
 # 設定情報をconfig.pyからインポート
-from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
+from config import chat_model, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
-chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
 
 
 
