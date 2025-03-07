@@ -13,6 +13,10 @@ from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, 
 # ChatOpenAI クライアントの初期化
 chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
 
+#タスクの完了登録がうまくいっていない
+
+
+
 def fetch_tasks():
     """
     Supabaseから、毎日通知するタスク（recurrenceが'everyday'かつ自分のタスク）を取得する。

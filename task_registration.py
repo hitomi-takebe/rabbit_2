@@ -7,7 +7,7 @@ from config import CURRENT_USER_ID, supabase
 # 設定情報をconfig.pyからインポート
 from config import chat_model, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
-
+#タスクの登録機能ができるようになっていないです
 
 
 def extract_task_info(input_text: str) -> dict:
@@ -57,7 +57,7 @@ def classify_confirmation(response_text: str) -> str:
 {{"confirmation": "<Yes | No>"}}
 
 === FEW-SHOT EXAMPLES ===
-User response: "はい"、 "Yes"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"　など
+User response: "はい"、 "Yes"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"など
 Output: {{"confirmation": "Yes"}}
 User response: "いいえ"、 "No"、 "違う"、 "ちがう"、 "間違ってる"、 "やり直す" など
 Output: {{"confirmation": "No"}}
