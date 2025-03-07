@@ -43,41 +43,42 @@ def extract_task_info(input_text: str) -> dict:
         print("レスポンス:", response.content)
         return {}
 
-# def insert_task():
-#     """
-#     タスク登録機能:
-#     ユーザーにタスク詳細を音声で尋ね、内容を抽出して DB に登録する。
-#     """
-#     speak("タスクの詳細を話してください。（例:『17時15分にお風呂に入る』など）")
-#     text_for_task = recognize_speech(timeout_seconds=120)
-#     if not text_for_task:
-#         speak("うまく聞き取れませんでした。タスク登録を中断します。")
-#         return
-#     task_info = extract_task_info(text_for_task)
-#     if not task_info or not task_info.get("title"):
-#         speak("タスクのタイトルが取得できませんでした。登録を中止します。")
-#         print("抽出結果:", task_info)
-#         return
-#     title = task_info["title"]
-#     scheduled_time = task_info.get("scheduled_time", None)
-#     data = {
-#         "user_id": CURRENT_USER_ID,
-#         "title": title,
-#         "recurrence": "everyday",  # 毎日タスクの例
-#         "scheduled_time": scheduled_time
-#     }
-#     try:
-#         res = supabase.table("tasks").insert(data).execute()
-#         if res.data:
-#             print("タスクを登録しました:", res.data)
-#             speak("タスクを登録しました。ありがとうございます。")
-#         else:
-#             print("タスク登録に失敗:", res)
-#             speak("タスク登録に失敗しました。")
-#     except Exception as e:
-#         print("DB処理でエラー:", e)
-#         speak("タスク登録の途中でエラーが発生しました。")
+def classify_confirmation(response_text: str) -> str:
+    """
+    ユーザーの確認応答を解析し、「Yes」または「No」かを判定する関数。
+    出力は必ず次の JSON 形式で返してください：
+    {
+      "confirmation": "<Yes | No>"
+    }
+    """
+    prompt = """
+あなたは、以下のユーザーの応答を解析し、それが確認の「はい」か「いいえ」かを判定してください。
+出力は必ず次の JSON 形式で返してください：
+{{"confirmation": "<Yes | No>"}}
 
+=== FEW-SHOT EXAMPLES ===
+User response: "はい"、 "Yes"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"　など
+Output: {{"confirmation": "Yes"}}
+User response: "いいえ"、 "No"、 "違う"、 "ちがう"、 "間違ってる"、 "やり直す" など
+Output: {{"confirmation": "No"}}
+=== END OF EXAMPLES ===
+
+ユーザー応答: "{response_text}"
+"""
+    prompt_template = PromptTemplate(input_variables=["response_text"], template=prompt)
+    final_prompt = prompt_template.format(response_text=response_text)
+    openai_response = chat_model.invoke(final_prompt)
+    try:
+        result = json.loads(openai_response.content.strip())
+        confirmation = result.get("confirmation", "No")
+        if confirmation not in ["Yes", "No"]:
+            confirmation = "No"
+        return confirmation
+    except Exception as e:
+        print("確認応答の解析エラー:", e)
+        return "No"
+
+    
 def insert_task():
     """
     タスク登録機能:
@@ -113,22 +114,25 @@ def insert_task():
             speak("タスクの実行時刻が見つかりませんでした。必ず時刻を含めて、もう一度言ってください。")
             print("抽出結果:", task_info)
             continue
+                # 全ての情報が取得できたらループを抜ける
+        break
 
-        # 取得した情報を変数に格納
-        title = task_info["title"]
-        scheduled_time = task_info["scheduled_time"]
+    # 取得した情報を変数に格納
+    title = task_info["title"]
+    scheduled_time = task_info["scheduled_time"]
 
-        # 最終確認
-        speak(f"確認します。毎日 {scheduled_time} に {title} する で登録して良いですか？　はい、または、いいえと答えてください。")
-        confirmation = recognize_speech(timeout_seconds=30).lower()
-        if "いいえ" in confirmation or "NO" in confirmation:
+    # 最終確認：内容を「{scheduled_time} に {title} する」で確認
+    while True:
+        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録して良いですか？　「はい」か「いいえ」で答えてください。")
+        confirmation_raw = recognize_speech(timeout_seconds=30)
+        confirmation = classify_confirmation(confirmation_raw)
+        if confirmation == "No":
             speak("了解しました。もう一度、最初からやり直します。")
-            continue  # ループの先頭に戻って再入力
-        elif "はい" in confirmation or "Yes" in confirmation:
-            break  # 最終確認OKならループを抜ける
+            return insert_task()  # 再帰的に再入力
+        elif confirmation == "Yes":
+            break
         else:
-            speak("確認できなかったので、もう一度入力してください。")
-            continue
+            speak("確認が取れなかったので、もう一度お答えください。")
 
     # ループを抜けた時点で、title と scheduled_time は正しく取得されているはず
     data = {
