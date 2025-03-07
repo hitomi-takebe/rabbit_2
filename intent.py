@@ -17,7 +17,7 @@ def extract_intent_info(input_text: str) -> str:
       - 「Hi Siri！」とだけ発言 → siri_chat.py (SiriChat)
 
     出力は以下のJSON形式で返してください:
-      {{"intent": "<Silent | TaskRegistration | SiriChat>"}}
+      {"intent": "<Silent | TaskRegistration | SiriChat>"}
     """
     few_shot_prompt = """
 あなたは音声アシスタントです。起動直後のシステムは次のフローで動作します:
@@ -32,7 +32,7 @@ def extract_intent_info(input_text: str) -> str:
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー: 「Hi Siri！タスクを登録する」
+ユーザー: 「Hi Siri タスクを登録する」
 出力:
 {{
   "intent": "TaskRegistration"
@@ -52,16 +52,33 @@ def extract_intent_info(input_text: str) -> str:
   "intent": "Silent"
 }}
 
+[例4]
+ユーザー: 「あいうえお」
+出力:
+{{
+  "intent": "Silent"
+}}
+
+[例5]
+ユーザー: 「タスクを登録する」
+出力:
+{{
+  "intent": "Silent"
+}}
+
 === END OF EXAMPLES ===
 
 以下のユーザー発話: 「{input_text}」
+この発話の意図を判定し、**JSON形式** で答えてください。
 """
-    # PromptTemplate に、input_text プレースホルダーを埋め込む
     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
     final_prompt = prompt_template.format(input_text=input_text)
     response = chat_model.invoke(final_prompt)
+    
+    # 応答の余分なバッククォートや空白を除去する
+    cleaned_content = response.content.strip().strip("```").strip()
     try:
-        result = json.loads(response.content.strip())
+        result = json.loads(cleaned_content)
         intent = result.get("intent", "Silent")
         if intent in ["Silent", "TaskRegistration", "SiriChat"]:
             return intent
@@ -69,4 +86,3 @@ def extract_intent_info(input_text: str) -> str:
     except (json.JSONDecodeError, AttributeError):
         print("意図解析に失敗しました。レスポンス:", response.content)
         return "Silent"
-
