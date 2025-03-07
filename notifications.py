@@ -40,6 +40,7 @@ def confirm_completion(user_text: str) -> bool:
 あなたはタスク管理アシスタントです。以下のルールに従って、ユーザーの発話がタスク完了を意味するか判定してください。
 - タスク完了を意味する場合は "Completed" と出力してください。
 - それ以外の場合は "NotCompleted" と出力してください。
+必ず**正しいJSON形式のみ**を出力してください。余分な文字や改行は一切含めないでください。
 
 例:
 入力: "完了しました"、 "終わったよ"、 "完了したよ"、 "できたよ"、"やったよ"、"終わりました"
@@ -50,7 +51,7 @@ def confirm_completion(user_text: str) -> bool:
 出力: NotCompleted
 
 以下のユーザー発話: "{input_text}"
-この発話の意図を判定し、**JSON形式** で答えてください。
+
 """
     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
     final_prompt = prompt_template.format(input_text=user_text)
