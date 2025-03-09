@@ -6,14 +6,10 @@ from config import chat_model
 def extract_intent_info(input_text: str) -> str:
     """
     FEW-SHOTプロンプトを用いて、ユーザーの発話から意図を判定する関数。
-
     システムのフロー:
       - 発言がない場合 → notifications.py (Silent)
       - 「Hi Siri！タスクを登録する」と発言 → task_registration.py (TaskRegistration)
       - 「Hi Siri！」とだけ発言 → siri_chat.py (SiriChat)
-
-    出力は以下のJSON形式で返してください:
-      {"intent": "<Silent | TaskRegistration | SiriChat>"}
     """
     few_shot_prompt = """
 あなたは音声アシスタントです。起動直後のシステムは次のフローで動作します:
@@ -69,12 +65,15 @@ def extract_intent_info(input_text: str) -> str:
 """
     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
     final_prompt = prompt_template.format(input_text=input_text)
+    print("AIに入力された文章：",final_prompt)
     response = chat_model.invoke(final_prompt)
-    
-    # 応答の余分なバッククォートや空白を除去する
     cleaned_content = response.content.strip().strip("```").strip()
+    print("AIから出力された文章：", response.content)
+    print("AIから出力された文章を綺麗にしたもの：",cleaned_content)
+
     try:
         result = json.loads(cleaned_content)
+        print("intentの値:", result)
         intent = result.get("intent", "Silent")
         if intent in ["Silent", "TaskRegistration", "SiriChat"]:
             return intent

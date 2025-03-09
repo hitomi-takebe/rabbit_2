@@ -68,6 +68,7 @@ Output: {{"confirmation": "No"}}
     prompt_template = PromptTemplate(input_variables=["response_text"], template=prompt)
     final_prompt = prompt_template.format(response_text=response_text)
     openai_response = chat_model.invoke(final_prompt)
+    print("確認応答解析結果:", openai_response.content)
     try:
         result = json.loads(openai_response.content.strip())
         confirmation = result.get("confirmation", "No")

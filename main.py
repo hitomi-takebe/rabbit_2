@@ -23,7 +23,7 @@ def process_user_input(user_text):
     - Silent: 発言がなかった場合は何もしない
     """
     intent = extract_intent_info(user_text)
-    print(f"認識Intent: {intent}")
+    print(f"main分岐: {intent}")
     
     if intent == "TaskRegistration":
         insert_task()

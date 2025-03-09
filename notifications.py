@@ -15,8 +15,6 @@ chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
 
 #タスクの完了登録がうまくいっていない
 
-
-
 def fetch_tasks():
     """
     Supabaseから、毎日通知するタスク（recurrenceが'everyday'かつ自分のタスク）を取得する。
@@ -24,44 +22,69 @@ def fetch_tasks():
     response = supabase.table("tasks").select("*").eq("recurrence", "everyday").eq("user_id", CURRENT_USER_ID).execute()
     return response.data if response.data else []
 
-def confirm_completion(user_text: str) -> bool:
-    """
-    FEW-SHOT プロンプトを用いて、ユーザーの発話がタスク完了の通知であるかを判定する関数。
-    返答は "Completed" または "NotCompleted" の単語のみで出力してください。
-
-    例:
-    入力: "完了しました"
-    出力: Completed
-
-    入力: "まだです"
-    出力: NotCompleted
-    """
+def confirm_task_completion(input_text: str) -> bool:
     few_shot_prompt = """
-あなたはタスク管理アシスタントです。以下のルールに従って、ユーザーの発話がタスク完了を意味するか判定してください。
-- タスク完了を意味する場合は "Completed" と出力してください。
-- それ以外の場合は "NotCompleted" と出力してください。
-必ず**正しいJSON形式のみ**を出力してください。余分な文字や改行は一切含めないでください。
+あなたはタスク完了確認アシスタントです。
+以下のユーザー発話が、タスクを完了したことを意味するか判定し、JSON形式で回答してください。
 
-例:
-入力: "完了しました"、 "終わったよ"、 "完了したよ"、 "できたよ"、"やったよ"、"終わりました"
-出力: Completed
+入力されたユーザー発話に基づき、以下の形式のJSONのみを出力してください:
+{{"status": "<Completed | NotCompleted>"}}
 
 
-入力: "まだです"、 ”まだだよ”、 ”いや”、 ”やりたくない”、 ”むり”
-出力: NotCompleted
+=== FEW-SHOT EXAMPLES ===
 
-以下のユーザー発話: "{input_text}"
+[例1]
+ユーザー発話:「完了したよ」
+出力: 
+{{
+"status": "Completed"
+}}
+
+[例2]
+ユーザー発話:「まだです」
+出力: 
+{{
+"status": "NotCompleted"
+}}
+
+[例3]
+ユーザー発話:「終わりました！」
+出力: 
+{{
+"status": "Completed"
+}}
+
+[例4]
+ユーザー発話:「ちょっと待ってください」
+出力: 
+{{
+"status": "NotCompleted"
+}}
+
+=== END OF EXAMPLES ===
+
+以下のユーザー発話: 「{input_text}」
+この発話の意図を判定し、**JSON形式** で答えてください。
 
 """
+
     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
-    final_prompt = prompt_template.format(input_text=user_text)
+    final_prompt = prompt_template.format(input_text=input_text)
+    print("AIに入力された文章：",final_prompt)
     response = chat_model.invoke(final_prompt)
-    # 余計なバッククォートや空白、複数行があれば最初の行を抽出
-    output = response.content.strip().strip("```").strip().splitlines()[0].strip()
-    print(f"認識した完了判定応答: '{output}'")  # デバッグ用
-    if output == "Completed":
-        return True
-    else:
+    cleaned_content = response.content.strip().strip("```").strip()
+    print("AIから出力された文章：", response.content)
+    print("AIから出力された文章を綺麗にしたもの：",cleaned_content)
+
+    try:
+        result = json.loads(cleaned_content)
+        print("statusの値:", result)
+        intent = result.get("Completed","NotCompleted")
+        if intent in ["Completed", "NotCompleted"]:
+            return intent
+        return "NotCompleted"
+    except json.JSONDecodeError:
+        print("AIの応答をJSONとして解析できませんでした:", cleaned_content)
         return False
 
 def notify_and_wait_for_completion(task: dict):
@@ -78,7 +101,7 @@ def notify_and_wait_for_completion(task: dict):
     user_input = recognize_speech(timeout_seconds=180)
     print(f"認識結果: '{user_input}'")  # 取得された発話の確認
 
-    if confirm_completion(user_input):
+    if confirm_task_completion(user_input):
         mark_task_completed(task_id)
     else:
         print("完了ワードが検出されませんでした。")
@@ -116,3 +139,68 @@ def run_task_notifications():
                 notify_and_wait_for_completion(task)
                 break  # 1回のループで1つのタスクのみ通知する
         time.sleep(1)
+
+
+
+# notifications.py
+# import json
+# import datetime
+# from langchain.prompts import PromptTemplate
+# from config import chat_model
+# from speech import recognize_speech
+
+
+# def confirm_task_completion(input_text: str) -> bool:
+#     """
+#     ユーザーの発話を元にタスクが完了したかをAIに判定させる関数。
+#     Completed なら True、それ以外は Falseを返す。
+#     """
+#     few_shot_prompt = """
+# あなたはタスク完了確認アシスタントです。
+# 以下のユーザー発話が、タスクを完了したことを意味するか判定し、JSON形式で回答してください。
+
+# 出力形式:
+# {"status": "Completed" または "NotCompleted"}
+
+# === FEW-SHOT EXAMPLES ===
+
+# [例1]
+# 入力:「完了したよ」
+# 出力: {"status": "Completed"}
+
+# [例2]
+# ユーザー発話:「まだです」
+# 出力:
+# {"status": "NotCompleted"}
+
+# [例3]
+# ユーザー発話:「終わりました！」
+# 出力:
+# {"status": "Completed"}
+
+# [例4]
+# ユーザー発話:「ちょっと待ってください」
+# 出力:
+# {"status": "NotCompleted"}
+
+# === END OF EXAMPLES ===
+
+# ユーザー発話: "{input_text}"
+# """
+
+#     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
+#     final_prompt = prompt_template.format(input_text=input_text)
+#     print("AIに入力された文章：",final_prompt)
+#     response = chat_model.invoke(final_prompt)
+#     cleaned_content = response.content.strip().strip("```").strip()
+#     print("AIから出力された文章：", response.content)
+#     print("AIから出力された文章を綺麗にしたもの：",cleaned_content)
+
+
+#     try:
+#         result = json.loads(cleaned_content)
+#         print("intentの値:", result)
+#         return result["status"] == "Completed"
+#     except json.JSONDecodeError:
+#         print("AIの応答をJSONとして解析できませんでした:", response.content)
+#         return False
