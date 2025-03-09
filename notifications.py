@@ -101,7 +101,8 @@ def notify_and_wait_for_completion(task: dict):
     user_input = recognize_speech(timeout_seconds=180)
     print(f"認識結果: '{user_input}'")  # 取得された発話の確認
 
-    if confirm_task_completion(user_input):
+    status = confirm_task_completion(user_input)
+    if status == "Completed":
         mark_task_completed(task_id)
     else:
         print("完了ワードが検出されませんでした。")
