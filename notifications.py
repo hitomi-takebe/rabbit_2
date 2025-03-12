@@ -77,13 +77,13 @@ def confirm_task_completion(input_text: str) -> bool:
     print("AIから出力された文章を綺麗にしたもの：",cleaned_content)
 
     try:
-        result = json.loads(cleaned_content)
-        print("statusの値:", result)
-        intent = result.get("Completed","NotCompleted")
-        if intent in ["Completed", "NotCompleted"]:
+        result = json.loads(cleaned_content)    # JSON形式の文字列を辞書型に変換
+        print("statusの値:", result)    # statusの値を確認
+        intent = result.get("status", "NotCompleted") #statusの値がない場合はNotCompletedを返す
+        if intent in ["Completed", "NotCompleted"]: # Completed または NotCompletedの場合はそのまま返す
             return intent
-        return "NotCompleted"
-    except json.JSONDecodeError:
+        return "NotCompleted"   # それ以外の場合は NotCompleted を返す
+    except json.JSONDecodeError:    # JSON形式でない場合はNotCompletedを返す
         print("AIの応答をJSONとして解析できませんでした:", cleaned_content)
         return False
 
