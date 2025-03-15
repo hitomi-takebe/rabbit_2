@@ -202,6 +202,6 @@ def run_task_notifications():
 #         result = json.loads(cleaned_content)
 #         print("intentの値:", result)
 #         return result["status"] == "Completed"
-#     except json.JSONDecodeError:
+#     except json.JONDecodeError:
 #         print("AIの応答をJSONとして解析できませんでした:", response.content)
 #         return False

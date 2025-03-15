@@ -6,7 +6,6 @@ from audio import speak, recognize_speech
 from config import CURRENT_USER_ID, supabase
 # 設定情報をconfig.pyからインポート
 from config import chat_model, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
-
 #タスクの登録機能ができるようになっていないです
 
 
