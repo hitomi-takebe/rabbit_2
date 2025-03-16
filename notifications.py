@@ -107,6 +107,9 @@ def notify_and_wait_for_completion(task: dict):
     else:
         print("完了ワードが検出されませんでした。")
         speak("完了が確認できませんでした。また後でチェックしますね。")
+        handle_incomplete_task(task_id)
+        
+
 
 def mark_task_completed(task_id: str):
     """
@@ -141,6 +144,14 @@ def run_task_notifications():
                 break  # 1回のループで1つのタスクのみ通知する
         time.sleep(1)
 
+def handle_incomplete_task(task_id: str):
+    """
+    タスクが完了しなかった場合の処理
+    例: その旨を伝え、別のリマインドを行う（ここでは単に通知失敗の旨を伝える）
+    """
+    print(f"タスク({task_id})は完了していませんでした。")
+    speak("タスクが完了していないようです。後ほど再度通知します。")
+    # ここで必要に応じて、再通知のための処理を追加できます。
 
 
 # notifications.py
