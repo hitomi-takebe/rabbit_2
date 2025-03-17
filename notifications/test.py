@@ -1,5 +1,11 @@
 # notifications.py
 
+import sys
+import os
+
+# 一個上のディレクトリをsys.pathに追加
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import json
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI

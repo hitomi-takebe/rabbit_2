@@ -114,16 +114,17 @@ def insert_task():
             speak("タスクの実行時刻が見つかりませんでした。必ず時刻を含めて、もう一度言ってください。")
             print("抽出結果:", task_info)
             continue
-                # 全ての情報が取得できたらループを抜ける
-        break
-
+            # 全ての情報が取得できたらループを抜ける
+        break   
+    
     # 取得した情報を変数に格納
     title = task_info["title"]
     scheduled_time = task_info["scheduled_time"]
+    
 
     # 最終確認：内容を「{scheduled_time} に {title} する」で確認
     while True:
-        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録して良いですか？　「はい」か「いいえ」で答えてください。")
+        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録して良いですか？「はい」か「いいえ」で答えてください。")
         confirmation_raw = recognize_speech(timeout_seconds=30)
         confirmation = classify_confirmation(confirmation_raw)
         if confirmation == "No":

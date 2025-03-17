@@ -1,20 +1,40 @@
 # audio.py
 import threading
-import pyttsx3
+import os
+import tempfile
+from gtts import gTTS
+# import pyttsx3
 import speech_recognition as sr
 import time
 # 設定情報をconfig.pyからインポート
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
+
 # グローバルTTSエンジン（メインスレッドで利用）
-engine = pyttsx3.init()
+# engine = pyttsx3.init()
 speech_lock = threading.Lock()
 
+# def speak(text: str):
+#     """スレッドセーフにテキストを読み上げる（TTS）"""
+#     with speech_lock:
+#         engine.say(text)
+#         engine.runAndWait()
+
 def speak(text: str):
-    """スレッドセーフにテキストを読み上げる（TTS）"""
     with speech_lock:
-        engine.say(text)
-        engine.runAndWait()
+        try:
+            # gTTSで音声生成（日本語）
+            tts = gTTS(text=text, lang="ja")
+            # 一時的なMP3ファイルを作成
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+                temp_filename = fp.name
+            tts.save(temp_filename)
+            # mpg123で再生（-q は再生中のログを抑制）
+            os.system("mpg123 -q " + temp_filename)
+        finally:
+            # 一時ファイルの削除
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
 
 def recognize_speech(timeout_seconds=120) -> str:
     """
