@@ -36,31 +36,38 @@ def speak(text: str):
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
 
-def recognize_speech(timeout_seconds=120) -> str:
-    """
-    マイクから音声を取得し、日本語で認識して文字列を返す。
-    timeout_seconds: 録音の上限秒数
-    """
-    print(f"音声入力を待機しています... 最大{timeout_seconds}秒")
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source)
-        try:
-            audio = recognizer.listen(source, timeout=timeout_seconds, phrase_time_limit=timeout_seconds)
-        except sr.WaitTimeoutError:
-            print("指定時間内に音声が入力されませんでした。")
-            return ""
-    try:
-        text = recognizer.recognize_google(audio, language="ja-JP")
-        print("認識結果:", text)
-        return text
-    except sr.UnknownValueError:
-        print("音声を認識できませんでした。")
-        return ""
-    except sr.RequestError:
-        print("音声認識サービスに接続できませんでした。")
-        return ""
 
+def recognize_speech(timeout_seconds=5):
+    recognizer = sr.Recognizer()
+
+    # Python から利用できるマイクデバイスを取得
+    mic_list = sr.Microphone.list_microphone_names()
+    print("Available Microphones:", mic_list)
+
+    # USBマイクまたはPulseAudioのデバイスを探す
+    device_index = None
+    for i, device in enumerate(mic_list):
+        if "USB" in device or "pulse" in device.lower():
+            device_index = i
+            break
+
+    if device_index is None:
+        print("No suitable microphone found. Using default device.")
+        device_index = 0  # デフォルトのマイクを使用
+
+    print(f"Using Microphone device_index={device_index}")
+
+    with sr.Microphone(device_index=device_index) as source:
+        print("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source, timeout=timeout_seconds)
+
+    try:
+        return recognizer.recognize_google(audio)
+    except sr.UnknownValueError:
+        return "Could not understand audio"
+    except sr.RequestError:
+        return "Error with speech recognition API"
 
         
 # audio.py
