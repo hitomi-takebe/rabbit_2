@@ -45,7 +45,7 @@ def recognize_speech(timeout_seconds=120) -> str:
     print(f"音声入力を待機しています... 最大{timeout_seconds}秒")
     recognizer = sr.Recognizer()
 
-    with sr.Microphone(device_index=1) as source:
+    with sr.Microphone() as source:
         recognizer.adjust_for_ambient_noise(source)
         try:
             audio = recognizer.listen(source, timeout=timeout_seconds, phrase_time_limit=timeout_seconds)

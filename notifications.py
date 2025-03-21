@@ -34,7 +34,7 @@ def confirm_task_completion(input_text: str) -> bool:
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー発話:「完了したよ」
+ユーザー発話:「完了」、「完了しました」、「やりました」
 出力: 
 {{
 "status": "Completed"
@@ -106,7 +106,7 @@ def notify_and_wait_for_completion(task: dict):
         mark_task_completed(task_id)
     else:
         print("完了ワードが検出されませんでした。")
-        speak("完了が確認できませんでした。また後でチェックしますね。")
+        speak("完了が確認できませんでした。また今度頑張ろうね。")
         handle_incomplete_task(task_id)
         
 
