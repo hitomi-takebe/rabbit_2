@@ -56,9 +56,9 @@ def classify_confirmation(response_text: str) -> str:
 {{"confirmation": "<Yes | No>"}}
 
 === FEW-SHOT EXAMPLES ===
-User response: "はい"、 "Yes"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"など
+User response: "はい"、 "イエス"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"など
 Output: {{"confirmation": "Yes"}}
-User response: "いいえ"、 "No"、 "違う"、 "ちがう"、 "間違ってる"、 "やり直す" など
+User response: "いいえ"、 "ノー"、 "違う"、 "ちがう"、 "間違ってる"、 "やり直す" など
 Output: {{"confirmation": "No"}}
 === END OF EXAMPLES ===
 
@@ -116,7 +116,7 @@ def insert_task():
             continue
             # 全ての情報が取得できたらループを抜ける
         break   
-    
+
     # 取得した情報を変数に格納
     title = task_info["title"]
     scheduled_time = task_info["scheduled_time"]
