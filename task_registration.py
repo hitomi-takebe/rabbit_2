@@ -51,7 +51,7 @@ def classify_confirmation(response_text: str) -> str:
     }
     """
     prompt = """
-あなたは、以下のユーザーの応答を解析し、それが確認の「はい」か「いいえ」かを判定してください。
+あなたは、以下のユーザーの応答を解析し、それが確認の「イエス」か「ノー」かを判定してください。
 出力は必ず次の JSON 形式で返してください：
 {{"confirmation": "<Yes | No>"}}
 

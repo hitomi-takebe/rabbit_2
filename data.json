@@ -1,0 +1,976 @@
+{
+    "status": "completed",
+    "session_id": "0195c12440200a306b8f9c99",
+    "service_id": "hitomi_0522222",
+    "content_id": "amivoice-api-client-library-main/audio/test2.wav",
+    "audio_size": 916114,
+    "audio_md5": "d4e1f4d07a67c389706815d05a7551a0",
+    "segments": [
+        {
+            "results": [
+                {
+                    "tokens": [
+                        {
+                            "written": "音声",
+                            "confidence": 1,
+                            "starttime": 928,
+                            "endtime": 1600,
+                            "spoken": "おんせい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "認識",
+                            "confidence": 1,
+                            "starttime": 1600,
+                            "endtime": 2112,
+                            "spoken": "にんしき",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "技術",
+                            "confidence": 1,
+                            "starttime": 2112,
+                            "endtime": 2496,
+                            "spoken": "ぎじゅつ",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "AmiVoice",
+                            "confidence": 1,
+                            "starttime": 2496,
+                            "endtime": 3120,
+                            "spoken": "あみぼいす",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "は",
+                            "confidence": 1,
+                            "starttime": 3120,
+                            "endtime": 3536,
+                            "spoken": "は",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "、",
+                            "confidence": 0.46,
+                            "starttime": 3536,
+                            "endtime": 3568,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "従来",
+                            "confidence": 1,
+                            "starttime": 3568,
+                            "endtime": 4112,
+                            "spoken": "じゅうらい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "の",
+                            "confidence": 1,
+                            "starttime": 4112,
+                            "endtime": 4240,
+                            "spoken": "の",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "機械",
+                            "confidence": 0.84,
+                            "starttime": 4240,
+                            "endtime": 4592,
+                            "spoken": "きかい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "が",
+                            "confidence": 1,
+                            "starttime": 4592,
+                            "endtime": 4704,
+                            "spoken": "が",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "中心",
+                            "confidence": 1,
+                            "starttime": 4704,
+                            "endtime": 5232,
+                            "spoken": "ちゅうしん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "と",
+                            "confidence": 1,
+                            "starttime": 5232,
+                            "endtime": 5344,
+                            "spoken": "と",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "なる",
+                            "confidence": 1,
+                            "starttime": 5344,
+                            "endtime": 5600,
+                            "spoken": "なる",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "音声",
+                            "confidence": 1,
+                            "starttime": 5600,
+                            "endtime": 6000,
+                            "spoken": "おんせい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "認識",
+                            "confidence": 1,
+                            "starttime": 6000,
+                            "endtime": 6496,
+                            "spoken": "にんしき",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "と",
+                            "confidence": 1,
+                            "starttime": 6496,
+                            "endtime": 6608,
+                            "spoken": "と",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "異なり",
+                            "confidence": 1,
+                            "starttime": 6608,
+                            "endtime": 7232,
+                            "spoken": "ことなり",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "、",
+                            "confidence": 0.81,
+                            "starttime": 7232,
+                            "endtime": 7648,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "人",
+                            "confidence": 1,
+                            "starttime": 7648,
+                            "endtime": 7904,
+                            "spoken": "ひと",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "が",
+                            "confidence": 1,
+                            "starttime": 7904,
+                            "endtime": 8016,
+                            "spoken": "が",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "自然",
+                            "confidence": 1,
+                            "starttime": 8016,
+                            "endtime": 8416,
+                            "spoken": "しぜん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "に",
+                            "confidence": 1,
+                            "starttime": 8416,
+                            "endtime": 8528,
+                            "spoken": "に",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "機械",
+                            "confidence": 0.74,
+                            "starttime": 8528,
+                            "endtime": 8880,
+                            "spoken": "きかい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "に",
+                            "confidence": 1,
+                            "starttime": 8880,
+                            "endtime": 8992,
+                            "spoken": "に",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "話しかけ",
+                            "confidence": 0.66,
+                            "starttime": 8992,
+                            "endtime": 9616,
+                            "spoken": "はなしかけ",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "る",
+                            "confidence": 0.67,
+                            "starttime": 9616,
+                            "endtime": 9712,
+                            "spoken": "る",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "と",
+                            "confidence": 1,
+                            "starttime": 9712,
+                            "endtime": 10048,
+                            "spoken": "と",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "、",
+                            "confidence": 0.98,
+                            "starttime": 10048,
+                            "endtime": 10256,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "あたかも",
+                            "confidence": 0.98,
+                            "starttime": 10256,
+                            "endtime": 10784,
+                            "spoken": "あたかも",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "人間",
+                            "confidence": 1,
+                            "starttime": 10784,
+                            "endtime": 11264,
+                            "spoken": "にんげん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "の",
+                            "confidence": 1,
+                            "starttime": 11264,
+                            "endtime": 11376,
+                            "spoken": "の",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "よう",
+                            "confidence": 0.96,
+                            "starttime": 11376,
+                            "endtime": 11568,
+                            "spoken": "よう",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "に",
+                            "confidence": 1,
+                            "starttime": 11568,
+                            "endtime": 11776,
+                            "spoken": "に",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "受け答え",
+                            "confidence": 1,
+                            "starttime": 11776,
+                            "endtime": 12320,
+                            "spoken": "うけこたえ",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "や",
+                            "confidence": 1,
+                            "starttime": 12320,
+                            "endtime": 12416,
+                            "spoken": "や",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "記録",
+                            "confidence": 1,
+                            "starttime": 12416,
+                            "endtime": 12832,
+                            "spoken": "きろく",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "など",
+                            "confidence": 0.82,
+                            "starttime": 12832,
+                            "endtime": 13088,
+                            "spoken": "など",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "の",
+                            "confidence": 1,
+                            "starttime": 13088,
+                            "endtime": 13200,
+                            "spoken": "の",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "動作",
+                            "confidence": 1,
+                            "starttime": 13200,
+                            "endtime": 13600,
+                            "spoken": "どうさ",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "を",
+                            "confidence": 1,
+                            "starttime": 13600,
+                            "endtime": 13696,
+                            "spoken": "を",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "して",
+                            "confidence": 0.96,
+                            "starttime": 13696,
+                            "endtime": 13872,
+                            "spoken": "して",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "くれる",
+                            "confidence": 1,
+                            "starttime": 13872,
+                            "endtime": 14400,
+                            "spoken": "くれる",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "音声",
+                            "confidence": 1,
+                            "starttime": 14624,
+                            "endtime": 15040,
+                            "spoken": "おんせい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "認識",
+                            "confidence": 1,
+                            "starttime": 15040,
+                            "endtime": 15520,
+                            "spoken": "にんしき",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "を",
+                            "confidence": 1,
+                            "starttime": 15520,
+                            "endtime": 15600,
+                            "spoken": "を",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "中心",
+                            "confidence": 1,
+                            "starttime": 15600,
+                            "endtime": 16144,
+                            "spoken": "ちゅうしん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "と",
+                            "confidence": 1,
+                            "starttime": 16144,
+                            "endtime": 16272,
+                            "spoken": "と",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "した",
+                            "confidence": 1,
+                            "starttime": 16272,
+                            "endtime": 16672,
+                            "spoken": "した",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "知的",
+                            "confidence": 0.99,
+                            "starttime": 16704,
+                            "endtime": 17072,
+                            "spoken": "ちてき",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "ヒューマン",
+                            "confidence": 1,
+                            "starttime": 17072,
+                            "endtime": 17584,
+                            "spoken": "ひゅーまん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "インターフェース",
+                            "confidence": 0.94,
+                            "starttime": 17584,
+                            "endtime": 18288,
+                            "spoken": "いんたーふぇーす",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "です",
+                            "confidence": 1,
+                            "starttime": 18288,
+                            "endtime": 18704,
+                            "spoken": "です",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "。",
+                            "confidence": 0.91,
+                            "starttime": 18704,
+                            "endtime": 18992,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        }
+                    ],
+                    "confidence": 1,
+                    "starttime": 800,
+                    "endtime": 18992,
+                    "tags": [],
+                    "rulename": "",
+                    "text": "音声認識技術AmiVoiceは、従来の機械が中心となる音声認識と異なり、人が自然に機械に話しかけると、あたかも人間のように受け答えや記録などの動作をしてくれる音声認識を中心とした知的ヒューマンインターフェースです。"
+                }
+            ],
+            "text": "音声認識技術AmiVoiceは、従来の機械が中心となる音声認識と異なり、人が自然に機械に話しかけると、あたかも人間のように受け答えや記録などの動作をしてくれる音声認識を中心とした知的ヒューマンインターフェースです。"
+        },
+        {
+            "results": [
+                {
+                    "tokens": [
+                        {
+                            "written": "アドバンスト・メディア",
+                            "confidence": 1,
+                            "starttime": 19602,
+                            "endtime": 20610,
+                            "spoken": "あどばんすとめでぃあ",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "は",
+                            "confidence": 1,
+                            "starttime": 20610,
+                            "endtime": 20962,
+                            "spoken": "は",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "、",
+                            "confidence": 0.83,
+                            "starttime": 20962,
+                            "endtime": 21058,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "人",
+                            "confidence": 0.98,
+                            "starttime": 21058,
+                            "endtime": 21346,
+                            "spoken": "ひと",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "と",
+                            "confidence": 0.98,
+                            "starttime": 21346,
+                            "endtime": 21474,
+                            "spoken": "と",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "機械",
+                            "confidence": 0.98,
+                            "starttime": 21474,
+                            "endtime": 21858,
+                            "spoken": "きかい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "と",
+                            "confidence": 1,
+                            "starttime": 21858,
+                            "endtime": 21986,
+                            "spoken": "と",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "の",
+                            "confidence": 0.97,
+                            "starttime": 21986,
+                            "endtime": 22114,
+                            "spoken": "の",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "自然",
+                            "confidence": 1,
+                            "starttime": 22114,
+                            "endtime": 22466,
+                            "spoken": "しぜん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "な",
+                            "confidence": 1,
+                            "starttime": 22466,
+                            "endtime": 22562,
+                            "spoken": "な",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "コミュニケーション",
+                            "confidence": 1,
+                            "starttime": 22562,
+                            "endtime": 23394,
+                            "spoken": "こみゅにけーしょん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "を",
+                            "confidence": 1,
+                            "starttime": 23394,
+                            "endtime": 23490,
+                            "spoken": "を",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "実現",
+                            "confidence": 1,
+                            "starttime": 23490,
+                            "endtime": 23954,
+                            "spoken": "じつげん",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "し",
+                            "confidence": 1,
+                            "starttime": 23954,
+                            "endtime": 24386,
+                            "spoken": "し",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "、",
+                            "confidence": 0.5,
+                            "starttime": 24386,
+                            "endtime": 24642,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "豊か",
+                            "confidence": 1,
+                            "starttime": 24642,
+                            "endtime": 25026,
+                            "spoken": "ゆたか",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "な",
+                            "confidence": 1,
+                            "starttime": 25026,
+                            "endtime": 25122,
+                            "spoken": "な",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "未来",
+                            "confidence": 1,
+                            "starttime": 25122,
+                            "endtime": 25522,
+                            "spoken": "みらい",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "を",
+                            "confidence": 1,
+                            "starttime": 25522,
+                            "endtime": 25602,
+                            "spoken": "を",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "創造",
+                            "confidence": 0.95,
+                            "starttime": 25602,
+                            "endtime": 26082,
+                            "spoken": "そうぞう",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "して",
+                            "confidence": 1,
+                            "starttime": 26082,
+                            "endtime": 26258,
+                            "spoken": "して",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "いく",
+                            "confidence": 1,
+                            "starttime": 26258,
+                            "endtime": 26450,
+                            "spoken": "いく",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "こと",
+                            "confidence": 0.95,
+                            "starttime": 26450,
+                            "endtime": 26722,
+                            "spoken": "こと",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "を",
+                            "confidence": 1,
+                            "starttime": 26722,
+                            "endtime": 26754,
+                            "spoken": "を",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "目指し",
+                            "confidence": 0.84,
+                            "starttime": 26754,
+                            "endtime": 27122,
+                            "spoken": "めざし",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "ます",
+                            "confidence": 0.84,
+                            "starttime": 27122,
+                            "endtime": 27554,
+                            "spoken": "ます",
+                            "label": "speaker0"
+                        },
+                        {
+                            "written": "。",
+                            "confidence": 0.92,
+                            "starttime": 27554,
+                            "endtime": 27842,
+                            "spoken": "_",
+                            "label": "speaker0"
+                        }
+                    ],
+                    "confidence": 0.998,
+                    "starttime": 19250,
+                    "endtime": 27842,
+                    "tags": [],
+                    "rulename": "",
+                    "text": "アドバンスト・メディアは、人と機械との自然なコミュニケーションを実現し、豊かな未来を創造していくことを目指します。"
+                }
+            ],
+            "text": "アドバンスト・メディアは、人と機械との自然なコミュニケーションを実現し、豊かな未来を創造していくことを目指します。"
+        }
+    ],
+    "utteranceid": "20250323/12/0195c1250e110a309c3b39d0_20250323_125626",
+    "text": "音声認識技術AmiVoiceは、従来の機械が中心となる音声認識と異なり、人が自然に機械に話しかけると、あたかも人間のように受け答えや記録などの動作をしてくれる音声認識を中心とした知的ヒューマンインターフェースです。アドバンスト・メディアは、人と機械との自然なコミュニケーションを実現し、豊かな未来を創造していくことを目指します。",
+    "code": "",
+    "message": "",
+    "sentiment_analysis": {
+        "segments": [
+            {
+                "starttime": 5780,
+                "endtime": 7280,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 18,
+                "uncertainty": 15,
+                "excitement": 15,
+                "concentration": 10,
+                "emo_cog": 32,
+                "hesitation": 16,
+                "brain_power": 27,
+                "embarrassment": 0,
+                "intensive_thinking": 67,
+                "imagination_activity": 8,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": 0,
+                "anticipation": 11,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 7820,
+                "endtime": 8740,
+                "energy": 2,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 40,
+                "uncertainty": 15,
+                "excitement": 15,
+                "concentration": 0,
+                "emo_cog": 29,
+                "hesitation": 19,
+                "brain_power": 27,
+                "embarrassment": 0,
+                "intensive_thinking": 76,
+                "imagination_activity": 7,
+                "extreme_emotion": 1,
+                "passionate": 0,
+                "atmosphere": 0,
+                "anticipation": 3,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 8740,
+                "endtime": 10140,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 23,
+                "uncertainty": 15,
+                "excitement": 19,
+                "concentration": 33,
+                "emo_cog": 46,
+                "hesitation": 16,
+                "brain_power": 35,
+                "embarrassment": 0,
+                "intensive_thinking": 55,
+                "imagination_activity": 6,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": 0,
+                "anticipation": 13,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 10320,
+                "endtime": 12340,
+                "energy": 2,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 56,
+                "uncertainty": 15,
+                "excitement": 15,
+                "concentration": 0,
+                "emo_cog": 36,
+                "hesitation": 19,
+                "brain_power": 31,
+                "embarrassment": 0,
+                "intensive_thinking": 55,
+                "imagination_activity": 5,
+                "extreme_emotion": 2,
+                "passionate": 1,
+                "atmosphere": 0,
+                "anticipation": 0,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 12340,
+                "endtime": 14340,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 45,
+                "uncertainty": 15,
+                "excitement": 16,
+                "concentration": 50,
+                "emo_cog": 46,
+                "hesitation": 16,
+                "brain_power": 32,
+                "embarrassment": 0,
+                "intensive_thinking": 46,
+                "imagination_activity": 7,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": 0,
+                "anticipation": 15,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 14680,
+                "endtime": 16700,
+                "energy": 2,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 53,
+                "uncertainty": 20,
+                "excitement": 15,
+                "concentration": 50,
+                "emo_cog": 40,
+                "hesitation": 14,
+                "brain_power": 36,
+                "embarrassment": 0,
+                "intensive_thinking": 51,
+                "imagination_activity": 2,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": 0,
+                "anticipation": 16,
+                "dissatisfaction": 0,
+                "confidence": 10
+            },
+            {
+                "starttime": 16780,
+                "endtime": 18540,
+                "energy": 2,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 46,
+                "uncertainty": 17,
+                "excitement": 16,
+                "concentration": 0,
+                "emo_cog": 45,
+                "hesitation": 17,
+                "brain_power": 37,
+                "embarrassment": 28,
+                "intensive_thinking": 48,
+                "imagination_activity": 8,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": -4,
+                "anticipation": 0,
+                "dissatisfaction": 0,
+                "confidence": 13
+            },
+            {
+                "starttime": 19660,
+                "endtime": 20940,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 25,
+                "uncertainty": 12,
+                "excitement": 15,
+                "concentration": 36,
+                "emo_cog": 48,
+                "hesitation": 19,
+                "brain_power": 31,
+                "embarrassment": 0,
+                "intensive_thinking": 33,
+                "imagination_activity": 5,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": -3,
+                "anticipation": 6,
+                "dissatisfaction": 0,
+                "confidence": 18
+            },
+            {
+                "starttime": 21280,
+                "endtime": 23300,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 33,
+                "uncertainty": 15,
+                "excitement": 16,
+                "concentration": 20,
+                "emo_cog": 49,
+                "hesitation": 12,
+                "brain_power": 35,
+                "embarrassment": 0,
+                "intensive_thinking": 43,
+                "imagination_activity": 4,
+                "extreme_emotion": 5,
+                "passionate": 0,
+                "atmosphere": -2,
+                "anticipation": 0,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 23300,
+                "endtime": 24340,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 30,
+                "uncertainty": 16,
+                "excitement": 17,
+                "concentration": 13,
+                "emo_cog": 59,
+                "hesitation": 12,
+                "brain_power": 37,
+                "embarrassment": 0,
+                "intensive_thinking": 11,
+                "imagination_activity": 3,
+                "extreme_emotion": 0,
+                "passionate": 1,
+                "atmosphere": -1,
+                "anticipation": 11,
+                "dissatisfaction": 0,
+                "confidence": 14
+            },
+            {
+                "starttime": 24720,
+                "endtime": 26440,
+                "energy": 3,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 36,
+                "uncertainty": 15,
+                "excitement": 15,
+                "concentration": 20,
+                "emo_cog": 43,
+                "hesitation": 12,
+                "brain_power": 32,
+                "embarrassment": 0,
+                "intensive_thinking": 54,
+                "imagination_activity": 8,
+                "extreme_emotion": 1,
+                "passionate": 0,
+                "atmosphere": 0,
+                "anticipation": 0,
+                "dissatisfaction": 0,
+                "confidence": 15
+            },
+            {
+                "starttime": 26480,
+                "endtime": 27400,
+                "energy": 2,
+                "content": 0,
+                "upset": 0,
+                "aggression": 0,
+                "stress": 30,
+                "uncertainty": 15,
+                "excitement": 15,
+                "concentration": 3,
+                "emo_cog": 40,
+                "hesitation": 11,
+                "brain_power": 31,
+                "embarrassment": 14,
+                "intensive_thinking": 38,
+                "imagination_activity": 1,
+                "extreme_emotion": 0,
+                "passionate": 0,
+                "atmosphere": -2,
+                "anticipation": 15,
+                "dissatisfaction": 0,
+                "confidence": 15
+            }
+        ]
+    }
+}
