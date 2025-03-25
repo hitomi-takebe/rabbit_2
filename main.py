@@ -7,7 +7,7 @@ from audio import recognize_speech
 from intent import extract_intent_info
 from task_registration import insert_task
 from notifications.test import fetch_tasks, notify_and_wait_for_completion
-from siri_chat import siri_chat
+from rabbit_chat import rabbit_chat
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
 # タスク通知を一時保管するキュー
@@ -19,7 +19,7 @@ def process_user_input(user_text):
     
     分岐:
     - TaskRegistration: タスク登録機能 (task_registration.py) を呼び出す
-    - SiriChat: 雑談機能 (siri_chat.py) を呼び出す
+    - rabbitChat: 雑談機能 (rabbit_chat.py) を呼び出す
     - Silent: 発言がなかった場合は何もしない
     """
     intent = extract_intent_info(user_text)
@@ -27,8 +27,8 @@ def process_user_input(user_text):
     
     if intent == "TaskRegistration":
         insert_task()
-    elif intent == "SiriChat":
-        siri_chat()
+    elif intent == "rabbitChat":
+        rabbit_chat()
     elif intent == "Silent":
         print("発言が認識されなかったため、何も処理しません。")
     else:
@@ -66,10 +66,14 @@ def main_loop():
     ② 音声入力処理が終わったら、キューに保管されているタスク通知を処理する。
     """
     while True:
-        # ① 音声入力のチェック
-        user_text = recognize_speech(timeout_seconds=5)
+        # ①音声入力のチェック
+        user_text = recognize_speech(timeout_seconds=5)['text']
+        # ②気持ちのチェック
+        user_emotions = recognize_speech(timeout_seconds=5)['ai_emotions']
+
         if user_text:
             process_user_input(user_text)
+            # process_user_emotions(user_emotions)
         
         # ② 音声入力処理が終わったら、キューにあるタスク通知を実行
         process_notification_queue()

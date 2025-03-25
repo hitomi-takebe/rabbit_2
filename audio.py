@@ -158,8 +158,8 @@ def process_sentiment_and_save(file_path: str, recognized_text: str) -> None:
         "confidence": averages.get("confidence")
     }
     
-    response = supabase.table("sentiment_averages").insert(data).execute()
-    print("Supabaseへの登録結果:", response)
+    emotions = supabase.table("sentiment_averages").insert(data).execute()
+    print("Supabaseへの登録結果:", emotions)
 
 def get_latest_sentiment_data(user_id: str) -> dict:
     """
@@ -177,7 +177,7 @@ def get_latest_sentiment_data(user_id: str) -> dict:
     else:
         return {}
 
-def generate_ai_response_from_record(record: dict) -> str:
+def generate_ai_emotions_from_record(record: dict) -> str:
     """
     Supabase に保存された感情分析結果レコード (record) をもとに、
     エネルギー、ストレス、感情/バランス/論理の数値と解釈、さらに
@@ -230,7 +230,7 @@ def generate_ai_response_from_record(record: dict) -> str:
         content_interp = "非常に良好な感情バランスが認められます。"
     
     # 文章としてまとめる
-    response = (
+    emotions = (
         "ユーザーの音声の感情分析結果は以下の通りです。これらを元に【伝えたい内容】を適切な表現で応答して、ユーザーを励ましてください。"
         "\n"
         f"【エネルギー】: {energy} 点（範囲: 0～100）。{energy_interp}\n"
@@ -238,7 +238,7 @@ def generate_ai_response_from_record(record: dict) -> str:
         f"【感情/バランス/論理】: {content} 点（範囲: 1～500）。{content_interp}\n"
         f"【ポジティブ：ネガティブ】：{positive}:{negative}\n"
     )
-    return response
+    return emotions
 
 # #google speech to textを利用したもの
 def recognize_speech(timeout_seconds=120) -> str:
@@ -249,7 +249,7 @@ def recognize_speech(timeout_seconds=120) -> str:
     print(f"音声入力を待機しています... 最大{timeout_seconds}秒")
     recognizer = sr.Recognizer()
     text = ""           # ここで初期化する
-    ai_response = ""
+    ai_emotions = ""
 
     with sr.Microphone() as source:
         recognizer.adjust_for_ambient_noise(source)
@@ -257,7 +257,7 @@ def recognize_speech(timeout_seconds=120) -> str:
             audio = recognizer.listen(source, timeout=timeout_seconds, phrase_time_limit=timeout_seconds)
         except sr.WaitTimeoutError:
             print("指定時間内に音声が入力されませんでした。")
-            return {"text": text, "ai_response": ai_response}
+            return {"text": text, "ai_emotions": ai_emotions}
         
     # speech_recognitionのAudioDataオブジェクトからWAVデータを取得し、一時的なWAVファイルに保存
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fp:
@@ -279,19 +279,19 @@ def recognize_speech(timeout_seconds=120) -> str:
         # 最新の感情分析レコードを取得
         record = get_latest_sentiment_data(CURRENT_USER_ID)
         if record:
-            ai_response = generate_ai_response_from_record(record)
-            print("AIの反応:", ai_response)
+            ai_emotions = generate_ai_emotions_from_record(record)
+            print("AIの反応:", ai_emotions)
         else:
             print("感情分析レコードが取得できませんでした。")
-        return {"text": text, "ai_response": ai_response}
+        return {"text": text, "ai_emotions": ai_emotions}
     
 
     except sr.UnknownValueError:
         print("音声を認識できませんでした。")
-        return {"text": text, "ai_response": ai_response}
+        return {"text": text, "ai_emotions": ai_emotions}
     except sr.RequestError:
         print("音声認識サービスに接続できませんでした。")
-        return {"text": text, "ai_response": ai_response}
+        return {"text": text, "ai_emotions": ai_emotions}
     finally:
         # 作成した一時ファイルを削除
         if os.path.exists(temp_wav):

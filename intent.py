@@ -8,33 +8,33 @@ def extract_intent_info(input_text: str) -> str:
     FEW-SHOTプロンプトを用いて、ユーザーの発話から意図を判定する関数。
     システムのフロー:
       - 発言がない場合 → notifications.py (Silent)
-      - 「Hi Siri！タスクを登録する」と発言 → task_registration.py (TaskRegistration)
-      - 「Hi Siri！」とだけ発言 → siri_chat.py (SiriChat)
+      - 「Hi rabbit！タスクを登録する」と発言 → task_registration.py (TaskRegistration)
+      - 「Hi rabbit！」とだけ発言 → rabbit_chat.py (rabbitChat)
     """
     few_shot_prompt = """
 あなたは音声アシスタントです。起動直後のシステムは次のフローで動作します:
 
 - ユーザーが何も発言しなかった場合は通知機能（notifications.py）を実行します。
-- ユーザーが「Hi Siri！タスクを登録する」と発言した場合はタスク登録機能（task_registration.py）を実行します。
-- ユーザーが「Hi Siri！」とだけ発言した場合は雑談機能（siri_chat.py）を実行します。
+- ユーザーが「Hi rabbit！タスクを登録する」と発言した場合はタスク登録機能（task_registration.py）を実行します。
+- ユーザーが「Hi rabbit！」とだけ発言した場合は雑談機能（rabbit_chat.py）を実行します。
 
 入力されたユーザー発話に基づき、以下の形式のJSONのみを出力してください:
-{{"intent": "<Silent | TaskRegistration | SiriChat>"}}
+{{"intent": "<Silent | TaskRegistration | rabbitChat>"}}
 
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー: 「Hi Siri！ タスクを登録する」
+ユーザー: 「Hi rabbit！ タスクを登録する」
 出力:
 {{
   "intent": "TaskRegistration"
 }}
 
 [例2]
-ユーザー: 「Hi Siri！」
+ユーザー: 「Hi rabbit！」
 出力:
 {{
-  "intent": "SiriChat"
+  "intent": "rabbitChat"
 }}
 
 [例3]
@@ -75,7 +75,7 @@ def extract_intent_info(input_text: str) -> str:
         result = json.loads(cleaned_content)
         print("intentの値:", result)
         intent = result.get("intent", "Silent")
-        if intent in ["Silent", "TaskRegistration", "SiriChat"]:
+        if intent in ["Silent", "TaskRegistration", "rabbitChat"]:
             return intent
         return "Silent"
     except (json.JSONDecodeError, AttributeError):
