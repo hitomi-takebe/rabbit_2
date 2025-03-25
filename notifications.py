@@ -11,7 +11,7 @@ import datetime
 import time
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-import datetime
+from datetime import datetime, timedelta
 import time
 from audio import speak, recognize_speech
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
@@ -26,6 +26,60 @@ def fetch_tasks():
     """
     response = supabase.table("tasks").select("*").eq("recurrence", "everyday").eq("user_id", CURRENT_USER_ID).execute()
     return response.data if response.data else []
+
+# タスク完了率を取得する関数
+def get_task_completion_rate(task_id: str, user_id: str, days: int = 7) -> float:
+    """
+    過去 `days` 日間のタスク達成率（task_id かつ user_id）を計算
+    """
+    since_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    res = supabase.table("task_completions")\
+        .select("is_completed")\
+        .eq("task_id", task_id)\
+        .eq("user_id", user_id)\
+        .gte("created_at", since_date)\
+        .execute()
+    records = res.data or []
+    if not records:
+        return 0.0
+    total = len(records)
+    completed = sum(1 for r in records if r.get("is_completed") is True)
+    return completed / total
+
+# タスク完了率を取得する関数
+def get_overall_completion_rate(user_id: str, days: int = 7) -> float:
+    """
+    過去 `days` 日間の全体のタスク達成率（user_idベース）を計算
+    """
+    since_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    res = supabase.table("task_completions")\
+        .select("is_completed")\
+        .eq("user_id", user_id)\
+        .gte("created_at", since_date)\
+        .execute()
+    records = res.data or []
+    if not records:
+        return 0.0
+    total = len(records)
+    completed = sum(1 for r in records if r.get("is_completed") is True)
+    return completed / total
+
+# 発言内容を達成度に応じて合成する関数
+def get_motivational_message(title: str, scheduled_time: str, task_rate: float, overall_rate: float) -> str:
+    """
+    達成率に応じてテンションを変えるメッセージを返す
+    """
+    base = f"毎日 {scheduled_time} に {title} の時間だよ！完了したら『完了したよ』などと言ってください。"
+
+    if task_rate >= 0.8 and overall_rate >= 0.8:
+        return f"今日も絶好調！{base}"
+    elif task_rate >= 0.5 or overall_rate >= 0.5:
+        return f"コツコツ続けてるね、{base}"
+    elif task_rate > 0 or overall_rate > 0:
+        return f"たまには {title} をやってみよう！応援してるよ。{base}"
+    else:
+        return f"今日は気合を入れて {title} をやってみよう！{base}"
+
 
 def confirm_task_completion(input_text: str) -> bool:
     """
@@ -92,7 +146,7 @@ def record_task_completion(task_id: str, is_completed: bool):
     """
     タスク完了の報告を DB に登録する処理。
     """
-    now_str = datetime.datetime.now().isoformat()
+    now_str = datetime.now().isoformat()
     data = {
         "task_id": task_id,
         "user_id": CURRENT_USER_ID,
@@ -120,9 +174,13 @@ def notify_and_wait_for_completion(task: dict):
     task_id = task["id"]
     scheduled_time = task.get("scheduled_time", "??:??:??")
 
-    speak(f"タスクの時間です。{title} をお願いします。")
-    print(f"[通知] 毎日 {scheduled_time} に {title} の時間です。")
-    speak("完了したら『完了したよ』などと言ってください。")
+    task_rate = get_task_completion_rate(task_id, CURRENT_USER_ID)
+    overall_rate = get_overall_completion_rate(CURRENT_USER_ID)
+    print(f"[達成率] タスク別: {task_rate:.0%}, 全体: {overall_rate:.0%}")
+
+    message = get_motivational_message(title, scheduled_time, task_rate, overall_rate)
+    print(message)
+    speak(message)
 
     user_input = recognize_speech(timeout_seconds=180)
     print(f"認識結果: '{user_input}'")
@@ -132,7 +190,7 @@ def notify_and_wait_for_completion(task: dict):
     record_task_completion(task_id, is_completed)
 
     if not is_completed:
-        speak("完了が確認できませんでした。また今度頑張ろうね。")
+        speak("また今度頑張ろうね。")
         handle_incomplete_task(task_id)
 
 def handle_incomplete_task(task_id: str):
