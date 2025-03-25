@@ -15,8 +15,8 @@ def extract_intent_info(input_text: str) -> str:
 あなたは音声アシスタントです。起動直後のシステムは次のフローで動作します:
 
 - ユーザーが何も発言しなかった場合は通知機能（notifications.py）を実行します。
-- ユーザーが「Hi rabbit！タスクを登録する」と発言した場合はタスク登録機能（task_registration.py）を実行します。
-- ユーザーが「Hi rabbit！」とだけ発言した場合は雑談機能（rabbit_chat.py）を実行します。
+- ユーザーが「hello rabbit！タスクを登録する」と発言した場合はタスク登録機能（task_registration.py）を実行します。
+- ユーザーが「hello rabbit！」とだけ発言した場合は雑談機能（rabbit_chat.py）を実行します。
 
 入力されたユーザー発話に基づき、以下の形式のJSONのみを出力してください:
 {{"intent": "<Silent | TaskRegistration | rabbitChat>"}}
@@ -24,14 +24,14 @@ def extract_intent_info(input_text: str) -> str:
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー: 「Hi rabbit！ タスクを登録する」
+ユーザー: 「hello rabbit！ タスクを登録する」、「ハローラビット、タスクを登録」、「ラビット、タスクを登録」
 出力:
 {{
   "intent": "TaskRegistration"
 }}
 
 [例2]
-ユーザー: 「Hi rabbit！」
+ユーザー: 「hello rabbit！」「ハロー ラビット」
 出力:
 {{
   "intent": "rabbitChat"
@@ -52,7 +52,7 @@ def extract_intent_info(input_text: str) -> str:
 }}
 
 [例5]
-ユーザー: 「タスクを登録する」
+ユーザー: 「タスクを登録する」、「登録」、「タスク」
 出力:
 {{
   "intent": "Silent"

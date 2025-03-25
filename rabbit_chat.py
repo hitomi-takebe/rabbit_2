@@ -9,7 +9,7 @@ def rabbit_chat():
     rabbit風雑談機能:
     ユーザーから雑談の発話があった場合に、簡単な応答を返す。
     """
-    speak("rabbitモードです。何かお話ししますか？")
+    speak("会話モードです。何かお話ししますか？")
     user_input = recognize_speech(timeout_seconds=15)
     if user_input:
         speak("なるほど、勉強になります！")
