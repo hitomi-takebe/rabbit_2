@@ -1,19 +1,24 @@
 # notifications.py
 
+import sys
+import os
+
+# # 一個上のディレクトリをsys.pathに追加
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import json
+import datetime
+import time
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 import datetime
 import time
 from audio import speak, recognize_speech
-# 設定情報をconfig.pyからインポート
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
-
+# from notifications import mark_task_completed, handle_incomplete_task
 
 # ChatOpenAI クライアントの初期化
 chat_model = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
-
-#タスクの完了登録がうまくいってない
 
 def fetch_tasks():
     """
@@ -23,69 +28,88 @@ def fetch_tasks():
     return response.data if response.data else []
 
 def confirm_task_completion(input_text: str) -> bool:
+    """
+    FEW-SHOT プロンプトを用いて、ユーザーの発話がタスク完了を意味するか判定する関数。
+    出力は以下の形式の JSON 形式で返してください:
+    {"status": "<Completed | NotCompleted>"}
+    """
     few_shot_prompt = """
 あなたはタスク完了確認アシスタントです。
-以下のユーザー発話が、タスクを完了したことを意味するか判定し、JSON形式で回答してください。
+以下のユーザー発話が、タスク完了を意味するか判定し、JSON形式で回答してください。
 
-入力されたユーザー発話に基づき、以下の形式のJSONのみを出力してください:
+出力形式:
 {{"status": "<Completed | NotCompleted>"}}
-
 
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー発話:「完了」、「完了しました」、「やりました」
+ユーザー発話:「完了したよ」
 出力: 
-{{
-"status": "Completed"
-}}
+{{"status": "Completed"}}
 
 [例2]
 ユーザー発話:「まだです」
 出力: 
-{{
-"status": "NotCompleted"
-}}
+{{"status": "NotCompleted"}}
 
 [例3]
 ユーザー発話:「終わりました！」
 出力: 
-{{
-"status": "Completed"
-}}
+{{"status": "Completed"}}
 
 [例4]
 ユーザー発話:「ちょっと待ってください」
 出力: 
-{{
-"status": "NotCompleted"
-}}
+{{"status": "NotCompleted"}}
 
 === END OF EXAMPLES ===
 
-以下のユーザー発話: 「{input_text}」
-この発話の意図を判定し、**JSON形式** で答えてください。
-
+以下のユーザー発話: "{input_text}"
 """
-
     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
     final_prompt = prompt_template.format(input_text=input_text)
-    print("AIに入力された文章：",final_prompt)
+    print("AIに入力された文章：", final_prompt)
     response = chat_model.invoke(final_prompt)
     cleaned_content = response.content.strip().strip("```").strip()
     print("AIから出力された文章：", response.content)
-    print("AIから出力された文章を綺麗にしたもの：",cleaned_content)
+    print("AIから出力された文章を綺麗にしたもの：", cleaned_content)
 
     try:
-        result = json.loads(cleaned_content)    # JSON形式の文字列を辞書型に変換
-        print("statusの値:", result)    # statusの値を確認
-        intent = result.get("status", "NotCompleted") #statusの値がない場合はNotCompletedを返す
-        if intent in ["Completed", "NotCompleted"]: # Completed または NotCompletedの場合はそのまま返す
-            return intent
-        return "NotCompleted"   # それ以外の場合は NotCompleted を返す
-    except json.JSONDecodeError:    # JSON形式でない場合はNotCompletedを返す
+        result = json.loads(cleaned_content)
+        status = result.get("status", "NotCompleted")
+        return status if status in ["Completed", "NotCompleted"] else "NotCompleted"
+    
+        # print("statusの値:", result)
+        # # 期待するキーは "status" です
+        # intent = result.get("status", "NotCompleted")
+        # return intent == "Completed"
+    except json.JSONDecodeError:
         print("AIの応答をJSONとして解析できませんでした:", cleaned_content)
-        return False
+        return "NotCompleted"
+
+# 旧mark_task_completed
+def record_task_completion(task_id: str, is_completed: bool):
+    """
+    タスク完了の報告を DB に登録する処理。
+    """
+    now_str = datetime.datetime.now().isoformat()
+    data = {
+        "task_id": task_id,
+        "user_id": CURRENT_USER_ID,
+        "is_completed": is_completed,
+        "created_at": now_str
+    }
+    try:
+        response = supabase.table("task_completions").insert(data).execute()
+        if response.data:
+            print(f"[DB] タスク({task_id}) を記録しました（完了: {is_completed}）")
+            speak("完了登録しました。" if is_completed else "未完了として記録しました。")
+        else:
+            print("[DB] 登録に失敗:", response)
+            speak("タスクの登録に失敗しました。")
+    except Exception as e:
+        print("DB登録でエラーが発生しました:", str(e))
+        speak("タスク完了の登録でエラーが発生しました。")
 
 def notify_and_wait_for_completion(task: dict):
     """
@@ -95,43 +119,28 @@ def notify_and_wait_for_completion(task: dict):
     title = task["title"]
     task_id = task["id"]
     scheduled_time = task.get("scheduled_time", "??:??:??")
+
     speak(f"タスクの時間です。{title} をお願いします。")
     print(f"[通知] 毎日 {scheduled_time} に {title} の時間です。")
     speak("完了したら『完了したよ』などと言ってください。")
+
     user_input = recognize_speech(timeout_seconds=180)
-    print(f"認識結果: '{user_input}'")  # 取得された発話の確認
+    print(f"認識結果: '{user_input}'")
 
     status = confirm_task_completion(user_input)
-    if status == "Completed":
-        mark_task_completed(task_id)
-    else:
-        print("完了ワードが検出されませんでした。")
+    is_completed = status == "Completed"
+    record_task_completion(task_id, is_completed)
+
+    if not is_completed:
         speak("完了が確認できませんでした。また今度頑張ろうね。")
         handle_incomplete_task(task_id)
-        
 
-
-def mark_task_completed(task_id: str):
+def handle_incomplete_task(task_id: str):
     """
-    タスク完了の報告を DB に登録する。
+    未完了時の処理（通知・ログ記録など）
     """
-    now_str = datetime.datetime.now().isoformat()
-    data = {
-        "task_id": task_id,
-        "user_id": CURRENT_USER_ID,
-        "completed_at": now_str
-    }
-    try:
-        response = supabase.table("task_completions").insert(data).execute()
-        if response.data:
-            print(f"タスク({task_id})を完了登録しました: {response.data}")
-            speak("タスクを完了登録しました。お疲れ様です。")
-        else:
-            print("タスク完了登録に失敗しました:", response)
-            speak("タスク完了の登録に失敗しました。")
-    except Exception as e:
-        print("DB登録でエラーが発生しました:", str(e))
-        speak("タスク完了の登録でエラーが発生しました。")
+    print(f"タスク({task_id}) は未完了でした。")
+    # 再通知や記録処理などをここに追加できます
 
 def run_task_notifications():
     """定期的にタスク通知をチェックし実行するループ"""
@@ -144,75 +153,5 @@ def run_task_notifications():
                 break  # 1回のループで1つのタスクのみ通知する
         time.sleep(1)
 
-def handle_incomplete_task(task_id: str):
-    """
-    タスクが完了しなかった場合の処理
-    例: その旨を伝え、別のリマインドを行う（ここでは単に通知失敗の旨を伝える）
-    """
-    print(f"タスク({task_id})は完了していませんでした。")
-    speak("タスクが完了していないようです。後ほど再度通知します。")
-    # ここで必要に応じて、再通知のための処理を追加できます。
-
-
-# notifications.py
-# import json
-# import datetime
-# from langchain.prompts import PromptTemplate
-# from config import chat_model
-# from speech import recognize_speech
-
-
-# def confirm_task_completion(input_text: str) -> bool:
-#     """
-#     ユーザーの発話を元にタスクが完了したかをAIに判定させる関数。
-#     Completed なら True、それ以外は Falseを返す。
-#     """
-#     few_shot_prompt = """
-# あなたはタスク完了確認アシスタントです。
-# 以下のユーザー発話が、タスクを完了したことを意味するか判定し、JSON形式で回答してください。
-
-# 出力形式:
-# {"status": "Completed" または "NotCompleted"}
-
-# === FEW-SHOT EXAMPLES ===
-
-# [例1]
-# 入力:「完了したよ」
-# 出力: {"status": "Completed"}
-
-# [例2]
-# ユーザー発話:「まだです」
-# 出力:
-# {"status": "NotCompleted"}
-
-# [例3]
-# ユーザー発話:「終わりました！」
-# 出力:
-# {"status": "Completed"}
-
-# [例4]
-# ユーザー発話:「ちょっと待ってください」
-# 出力:
-# {"status": "NotCompleted"}
-
-# === END OF EXAMPLES ===
-
-# ユーザー発話: "{input_text}"
-# """
-
-#     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
-#     final_prompt = prompt_template.format(input_text=input_text)
-#     print("AIに入力された文章：",final_prompt)
-#     response = chat_model.invoke(final_prompt)
-#     cleaned_content = response.content.strip().strip("```").strip()
-#     print("AIから出力された文章：", response.content)
-#     print("AIから出力された文章を綺麗にしたもの：",cleaned_content)
-
-
-#     try:
-#         result = json.loads(cleaned_content)
-#         print("intentの値:", result)
-#         return result["status"] == "Completed"
-#     except json.JONDecodeError:
-#         print("AIの応答をJSONとして解析できませんでした:", response.content)
-#         return False
+if __name__ == "__main__":
+    run_task_notifications()

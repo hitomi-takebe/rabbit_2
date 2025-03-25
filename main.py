@@ -6,7 +6,7 @@ import queue
 from audio import recognize_speech
 from intent import extract_intent_info
 from task_registration import insert_task
-from notifications.test import fetch_tasks, notify_and_wait_for_completion
+from notifications import fetch_tasks, notify_and_wait_for_completion
 from rabbit_chat import rabbit_chat
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
