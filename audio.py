@@ -228,9 +228,9 @@ def generate_ai_emotions_from_record(record: dict) -> str:
     # else:
     #     content_interp = "非常に良好な感情バランスが認められます。"
     
-    # 文章としてまとめる
+    # 文章としてまとめる、今後ここに感情分析結果を挿入します。
     emotions = (
-        "今後ここに感情分析結果を挿入します。"
+        " "
         # "ユーザーの音声の感情分析結果は以下の通りです。これらを元に【伝えたい内容】を適切な表現で応答して、ユーザーを励ましてください。"
         # "\n"
         # f"【エネルギー】: {energy} 点（範囲: 0～100）。{energy_interp}\n"
@@ -280,7 +280,7 @@ def recognize_speech(timeout_seconds=120) -> str:
         record = get_latest_sentiment_data(CURRENT_USER_ID)
         if record:
             ai_emotions = generate_ai_emotions_from_record(record)
-            print("AIの反応:", ai_emotions)
+            print("感情分析の情報:", ai_emotions)
         else:
             print("感情分析レコードが取得できませんでした。")
         return {"text": text, "ai_emotions": ai_emotions}

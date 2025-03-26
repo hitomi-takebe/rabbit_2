@@ -70,9 +70,14 @@ def should_end_conversation(user_text: str) -> bool:
 
 # メインループ
 def rabbit_chat():
-    messages: List[Dict[str, str]] = []
+    first_time = True  # 最初のループかどうかを判定するフラグ
+    messages: List[Dict[str, str]] = []  # 初期化をループ前に実施
 
     while True:
+        if first_time:
+            speak("会話モードです。何かお話ししますか？")
+            first_time = False
+
         recog_result = recognize_speech()
         recog_text = recog_result["text"]
         ai_emotions = recog_result["ai_emotions"]
@@ -88,9 +93,10 @@ def rabbit_chat():
             time.sleep(1.5)  # ← これで確実に喋る時間を確保
             break
 
-        # # 感情分析情報も含めて送信
-        # if ai_emotions:
-        #     recog_text += f"\n（感情分析の情報）\n{ai_emotions}"
+        # 感情分析情報も含めて送信
+        if ai_emotions:
+            # recog_text += f"\n（感情分析の情報）\n{ai_emotions}"
+            recog_text += f"{ai_emotions}"
 
         new_message, messages = completion(recog_text, messages)
         print("ChatGPT：", new_message)
