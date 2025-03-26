@@ -3,7 +3,7 @@ import time
 import datetime
 import threading
 import queue
-from audio import recognize_speech
+from audio import recognize_speech,speak
 from intent import extract_intent_info
 from task_registration import insert_task
 from notifications import fetch_tasks, notify_and_wait_for_completion
@@ -81,6 +81,8 @@ def main_loop():
         time.sleep(0.5)
 
 if __name__ == "__main__":
+    # 起動時に一度だけ発話する
+    speak("起動しました。")
     # タスク監視スレッドを開始（このスレッドは常にバックグラウンドでタスクの監視・キューへの追加を行う）
     monitor_thread = threading.Thread(target=task_monitor, daemon=True)
     monitor_thread.start()
