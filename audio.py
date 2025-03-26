@@ -51,54 +51,54 @@ def analyze_sentiment(file_path: str) -> dict:
     """
     return {
         "segments": [
-            {
-                "starttime": 1000,
-                "endtime": 2000,
-                "energy": 3,
-                "content": 0,
-                "upset": 0,
-                "aggression": 0,
-                "stress": 10,
-                "uncertainty": 15,
-                "excitement": 12,
-                "concentration": 8,
-                "emo_cog": 20,
-                "hesitation": 5,
-                "brain_power": 25,
-                "embarrassment": 0,
-                "intensive_thinking": 30,
-                "imagination_activity": 7,
-                "extreme_emotion": 0,
-                "passionate": 0,
-                "atmosphere": 0,
-                "anticipation": 10,
-                "dissatisfaction": 0,
-                "confidence": 14
-            },
-            {
-                "starttime": 2100,
-                "endtime": 3000,
-                "energy": 2,
-                "content": 0,
-                "upset": 0,
-                "aggression": 0,
-                "stress": 20,
-                "uncertainty": 15,
-                "excitement": 14,
-                "concentration": 10,
-                "emo_cog": 22,
-                "hesitation": 6,
-                "brain_power": 27,
-                "embarrassment": 0,
-                "intensive_thinking": 32,
-                "imagination_activity": 5,
-                "extreme_emotion": 1,
-                "passionate": 0,
-                "atmosphere": -1,
-                "anticipation": 8,
-                "dissatisfaction": 0,
-                "confidence": 16
-            }
+            # {
+            #     "starttime": 1000,
+            #     "endtime": 2000,
+            #     "energy": 3,
+            #     "content": 0,
+            #     "upset": 0,
+            #     "aggression": 0,
+            #     "stress": 10,
+            #     "uncertainty": 15,
+            #     "excitement": 12,
+            #     "concentration": 8,
+            #     "emo_cog": 20,
+            #     "hesitation": 5,
+            #     "brain_power": 25,
+            #     "embarrassment": 0,
+            #     "intensive_thinking": 30,
+            #     "imagination_activity": 7,
+            #     "extreme_emotion": 0,
+            #     "passionate": 0,
+            #     "atmosphere": 0,
+            #     "anticipation": 10,
+            #     "dissatisfaction": 0,
+            #     "confidence": 14
+            # },
+            # {
+            #     "starttime": 2100,
+            #     "endtime": 3000,
+            #     "energy": 2,
+            #     "content": 0,
+            #     "upset": 0,
+            #     "aggression": 0,
+            #     "stress": 20,
+            #     "uncertainty": 15,
+            #     "excitement": 14,
+            #     "concentration": 10,
+            #     "emo_cog": 22,
+            #     "hesitation": 6,
+            #     "brain_power": 27,
+            #     "embarrassment": 0,
+            #     "intensive_thinking": 32,
+            #     "imagination_activity": 5,
+            #     "extreme_emotion": 1,
+            #     "passionate": 0,
+            #     "atmosphere": -1,
+            #     "anticipation": 8,
+            #     "dissatisfaction": 0,
+            #     "confidence": 16
+            # }
         ]
     }
 
@@ -135,26 +135,26 @@ def process_sentiment_and_save(file_path: str, recognized_text: str) -> None:
     data = {
         "user_id": CURRENT_USER_ID,
         "talk": recognized_text,
-        "energy": averages.get("energy"),
-        "content": averages.get("content"),
-        "upset": averages.get("upset"),
-        "aggression": averages.get("aggression"),
-        "stress": averages.get("stress"),
-        "uncertainty": averages.get("uncertainty"),
-        "excitement": averages.get("excitement"),
-        "concentration": averages.get("concentration"),
-        "emo_cog": averages.get("emo_cog"),
-        "hesitation": averages.get("hesitation"),
-        "brain_power": averages.get("brain_power"),
-        "embarrassment": averages.get("embarrassment"),
-        "intensive_thinking": averages.get("intensive_thinking"),
-        "imagination_activity": averages.get("imagination_activity"),
-        "extreme_emotion": averages.get("extreme_emotion"),
-        "passionate": averages.get("passionate"),
-        "atmosphere": averages.get("atmosphere"),
-        "anticipation": averages.get("anticipation"),
-        "dissatisfaction": averages.get("dissatisfaction"),
-        "confidence": averages.get("confidence")
+        # "energy": averages.get("energy"),
+        # "content": averages.get("content"),
+        # "upset": averages.get("upset"),
+        # "aggression": averages.get("aggression"),
+        # "stress": averages.get("stress"),
+        # "uncertainty": averages.get("uncertainty"),
+        # "excitement": averages.get("excitement"),
+        # "concentration": averages.get("concentration"),
+        # "emo_cog": averages.get("emo_cog"),
+        # "hesitation": averages.get("hesitation"),
+        # "brain_power": averages.get("brain_power"),
+        # "embarrassment": averages.get("embarrassment"),
+        # "intensive_thinking": averages.get("intensive_thinking"),
+        # "imagination_activity": averages.get("imagination_activity"),
+        # "extreme_emotion": averages.get("extreme_emotion"),
+        # "passionate": averages.get("passionate"),
+        # "atmosphere": averages.get("atmosphere"),
+        # "anticipation": averages.get("anticipation"),
+        # "dissatisfaction": averages.get("dissatisfaction"),
+        # "confidence": averages.get("confidence")
     }
     
     emotions = supabase.table("sentiment_averages").insert(data).execute()
@@ -182,60 +182,61 @@ def generate_ai_emotions_from_record(record: dict) -> str:
     エネルギー、ストレス、感情/バランス/論理の数値と解釈、さらに
     全体のポジティブ・ネガティブ集計結果を含む文章を生成します。
     """
-    # 個別の数値を取得（存在しない場合は 0 とする）
-    energy = record.get("energy", 0)
-    stress = record.get("stress", 0)
-    content = record.get("content", 0)  # 感情/バランス/論理に対応
-    # ポジティブな指標：エネルギー、興奮、confidence、anticipation など
-    positive = (
-        record.get("energy", 0) +
-        record.get("excitement", 0) +
-        record.get("confidence", 0) +
-        record.get("anticipation", 0)
-    )
-    # ネガティブな指標：ストレス、upset、aggression、uncertainty、dissatisfaction など
-    negative = (
-        record.get("stress", 0) +
-        record.get("upset", 0) +
-        record.get("aggression", 0) +
-        record.get("uncertainty", 0) +
-        record.get("dissatisfaction", 0)
-    )
+    # # 個別の数値を取得（存在しない場合は 0 とする）
+    # energy = record.get("energy", 0)
+    # stress = record.get("stress", 0)
+    # content = record.get("content", 0)  # 感情/バランス/論理に対応
+    # # ポジティブな指標：エネルギー、興奮、confidence、anticipation など
+    # positive = (
+    #     record.get("energy", 0) +
+    #     record.get("excitement", 0) +
+    #     record.get("confidence", 0) +
+    #     record.get("anticipation", 0)
+    # )
+    # # ネガティブな指標：ストレス、upset、aggression、uncertainty、dissatisfaction など
+    # negative = (
+    #     record.get("stress", 0) +
+    #     record.get("upset", 0) +
+    #     record.get("aggression", 0) +
+    #     record.get("uncertainty", 0) +
+    #     record.get("dissatisfaction", 0)
+    # )
     
-    # エネルギーの解釈（例）
-    if energy <= 10:
-        energy_interp = "低領域で、気落ちや退屈、疲労を示唆しています。"
-    elif energy <= 20:
-        energy_interp = "快適な会話が行えている状態です。"
-    elif energy <= 40:
-        energy_interp = "会話が盛り上がっている可能性があります。"
-    else:
-        energy_interp = "非常に高いエネルギー状態で、感情が昂っています。"
+    # # エネルギーの解釈（例）
+    # if energy <= 10:
+    #     energy_interp = "低領域で、気落ちや退屈、疲労を示唆しています。"
+    # elif energy <= 20:
+    #     energy_interp = "快適な会話が行えている状態です。"
+    # elif energy <= 40:
+    #     energy_interp = "会話が盛り上がっている可能性があります。"
+    # else:
+    #     energy_interp = "非常に高いエネルギー状態で、感情が昂っています。"
     
-    # ストレスの解釈
-    if stress < 30:
-        stress_interp = "リラックスしている状態です。"
-    elif stress < 70:
-        stress_interp = "ややストレスを感じているようです。"
-    else:
-        stress_interp = "強いストレスが感じられます。"
+    # # ストレスの解釈
+    # if stress < 30:
+    #     stress_interp = "リラックスしている状態です。"
+    # elif stress < 70:
+    #     stress_interp = "ややストレスを感じているようです。"
+    # else:
+    #     stress_interp = "強いストレスが感じられます。"
     
-    # 感情/バランス/論理（content）の解釈（例）
-    if content < 100:
-        content_interp = "感情のバランスが崩れている可能性があります。"
-    elif content < 300:
-        content_interp = "安定した感情バランスが保たれています。"
-    else:
-        content_interp = "非常に良好な感情バランスが認められます。"
+    # # 感情/バランス/論理（content）の解釈（例）
+    # if content < 100:
+    #     content_interp = "感情のバランスが崩れている可能性があります。"
+    # elif content < 300:
+    #     content_interp = "安定した感情バランスが保たれています。"
+    # else:
+    #     content_interp = "非常に良好な感情バランスが認められます。"
     
     # 文章としてまとめる
     emotions = (
-        "ユーザーの音声の感情分析結果は以下の通りです。これらを元に【伝えたい内容】を適切な表現で応答して、ユーザーを励ましてください。"
-        "\n"
-        f"【エネルギー】: {energy} 点（範囲: 0～100）。{energy_interp}\n"
-        f"【ストレス】: {stress} 点（範囲: 0～100）。{stress_interp}\n"
-        f"【感情/バランス/論理】: {content} 点（範囲: 1～500）。{content_interp}\n"
-        f"【ポジティブ：ネガティブ】：{positive}:{negative}\n"
+        "今後ここに感情分析結果を挿入します。"
+        # "ユーザーの音声の感情分析結果は以下の通りです。これらを元に【伝えたい内容】を適切な表現で応答して、ユーザーを励ましてください。"
+        # "\n"
+        # f"【エネルギー】: {energy} 点（範囲: 0～100）。{energy_interp}\n"
+        # f"【ストレス】: {stress} 点（範囲: 0～100）。{stress_interp}\n"
+        # f"【感情/バランス/論理】: {content} 点（範囲: 1～500）。{content_interp}\n"
+        # f"【ポジティブ：ネガティブ】：{positive}:{negative}\n"
     )
     return emotions
 
