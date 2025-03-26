@@ -72,9 +72,9 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
     base = f"{scheduled_time} に {title} の時間だよ！"
 
     if task_rate >= 0.8 and overall_rate >= 0.8:
-        return f"今日も絶好調！今日も絶好調！{base}このタスクの達成率は{task_rate * 100:.0f}!完了したら『完了したよ』と言ってね。"
+        return f"今日も絶好調！{base}このタスクの達成率は{task_rate * 100:.0f}％!完了したら『完了したよ』と言ってね。"
     elif task_rate >= 0.5 or overall_rate >= 0.5:
-        return f"コツコツ続けてるね。{base}このタスクの達成率は{task_rate * 100:.0f}!完了したら『完了したよ』と言ってね。"
+        return f"コツコツ続けてるね。{base}このタスクの達成率は{task_rate * 100:.0f}％!完了したら『完了したよ』と言ってね。"
     elif task_rate > 0 or overall_rate > 0:
         return f"たまには {title} をやってみよう！応援してるよ。{base}"
     else:
