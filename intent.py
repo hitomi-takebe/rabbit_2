@@ -31,7 +31,7 @@ def extract_intent_info(input_text: str) -> str:
 }}
 
 [例2]
-ユーザー: 「rabbit！」「ラビット」、「こんにちは、ラビット」
+ユーザー: 「rabbit！会話したい」「ラビット、会話」、「こんにちは、ラビット」
 出力:
 {{
   "intent": "rabbitChat"
