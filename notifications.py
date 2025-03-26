@@ -69,16 +69,16 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
     """
     達成率に応じてテンションを変えるメッセージを返す
     """
-    base = f"毎日 {scheduled_time} に {title} の時間だよ！完了したら『完了したよ』などと言ってください。"
+    base = f"{scheduled_time} に {title} の時間だよ！"
 
     if task_rate >= 0.8 and overall_rate >= 0.8:
-        return f"今日も絶好調！{base}"
+        return f"今日も絶好調！今日も絶好調！{base}このタスクの達成率は{task_rate * 100:.0f}!完了したら『完了したよ』と言ってね。"
     elif task_rate >= 0.5 or overall_rate >= 0.5:
-        return f"コツコツ続けてるね、{base}"
+        return f"コツコツ続けてるね。{base}このタスクの達成率は{task_rate * 100:.0f}!完了したら『完了したよ』と言ってね。"
     elif task_rate > 0 or overall_rate > 0:
         return f"たまには {title} をやってみよう！応援してるよ。{base}"
     else:
-        return f"今日は気合を入れて {title} をやってみよう！{base}"
+        return f"今日は気合を入れて {title} をやってみよう！{base}完了したら『完了したよ』などと言ってね。"
 
 
 def confirm_task_completion(input_text: str) -> bool:
@@ -97,7 +97,7 @@ def confirm_task_completion(input_text: str) -> bool:
 === FEW-SHOT EXAMPLES ===
 
 [例1]
-ユーザー発話:「完了したよ」
+ユーザー発話:「完了」、「やったよ」、「DONE」
 出力: 
 {{"status": "Completed"}}
 

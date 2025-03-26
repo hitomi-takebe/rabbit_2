@@ -14,7 +14,7 @@ def extract_task_info(input_text: str) -> dict:
     タスクの記述文から、タスクタイトルと予定時刻（HH:MM:SS）を抽出する。
     例:
     {
-      "title": "お風呂に入る",
+    "title": "お風呂に入る",
       "scheduled_time": "21:00:00"  // 時刻がなければ null
     }
     """
@@ -25,8 +25,8 @@ def extract_task_info(input_text: str) -> dict:
 以下の文章: 「{input_text}」
 から、
 {{
-  "title": "<タスク名>",
-  "scheduled_time": "<HH:MM:SS または null>"
+    "title": "<タスク名>",
+    "scheduled_time": "<HH:MM:SS または null>"
 }}
 の形式のJSONのみを出力してください。
 もし時刻が含まれていなければ "scheduled_time": null としてください。
@@ -47,7 +47,7 @@ def classify_confirmation(response_text: str) -> str:
     ユーザーの確認応答を解析し、「Yes」または「No」かを判定する関数。
     出力は必ず次の JSON 形式で返してください：
     {
-      "confirmation": "<Yes | No>"
+    "confirmation": "<Yes | No>"
     }
     """
     prompt = """
