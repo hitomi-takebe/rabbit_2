@@ -56,9 +56,9 @@ def classify_confirmation(response_text: str) -> str:
 {{"confirmation": "<Yes | No>"}}
 
 === FEW-SHOT EXAMPLES ===
-User response: "はい"、 "イエス"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"など
+User response: "そうです"、 "はい"、 "イエス"、 "そう"、 "OK"、 "あってる"、 "そうそう"、 "承知しました"、 "うん"など
 Output: {{"confirmation": "Yes"}}
-User response: "いいえ"、 "ノー"、 "違う"、 "ちがう"、 "間違ってる"、 "やり直す" など
+User response:  "やり直す" 、"いいえ"、 "ノー"、 "違う"、 "ちがう"、 "間違ってる"など
 Output: {{"confirmation": "No"}}
 === END OF EXAMPLES ===
 
@@ -124,7 +124,7 @@ def insert_task():
 
     # 最終確認：内容を「{scheduled_time} に {title} する」で確認
     while True:
-        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録して良いですか？「はい」か「いいえ」で答えてください。")
+        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録して良いですか？「そうです」または「やり直す」で答えてください。")
         confirmation_raw = recognize_speech(timeout_seconds=30)
         confirmation = classify_confirmation(confirmation_raw)
         if confirmation == "No":
