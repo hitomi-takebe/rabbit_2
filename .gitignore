@@ -6,3 +6,5 @@ venv
 # Python bytecode
 __pycache__/
 *.pyc
+
+emotion_data
