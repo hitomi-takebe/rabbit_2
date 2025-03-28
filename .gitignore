@@ -7,4 +7,4 @@ venv
 __pycache__/
 *.pyc
 
-emotion_data
+emotion_date

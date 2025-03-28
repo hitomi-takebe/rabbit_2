@@ -283,7 +283,7 @@ def recognize_speech(timeout_seconds=120) -> str:
             print("感情分析の情報:", ai_emotions)
         else:
             print("感情分析レコードが取得できませんでした。")
-        return {"text": text, "ai_emotions": ai_emotions}
+        return {"text": text, "ai_emotions": ai_emotions},audio
     
 
     except sr.UnknownValueError:
