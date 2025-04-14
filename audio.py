@@ -232,7 +232,7 @@ if __name__ == "__main__":
         print("認識結果:", recognized_text)
         
         # ①：感情分析＆Supabase登録処理
-        process_sentiment_and_save(audio_file, recognized_text)
+        # process_sentiment_and_save(audio_file, recognized_text)
         
         # # 最新の感情分析レコードからAI解釈結果を取得
         # record_data = get_latest_sentiment_data(CURRENT_USER_ID)
@@ -496,6 +496,7 @@ def recognize_speech(timeout_seconds=120) -> str:
     recognizer = sr.Recognizer()
     text = ""           # ここで初期化する
     ai_emotions = ""
+    emotion_label = ""
 
     with sr.Microphone() as source:
         recognizer.adjust_for_ambient_noise(source)
@@ -523,11 +524,11 @@ def recognize_speech(timeout_seconds=120) -> str:
         process_sentiment_and_save(temp_wav, text)
 
         # ここに pyAudioAnalysisの感情分類を追加
-        emotion_label = classify_emotion(temp_wav)
-        if emotion_label:
-            print("推定された感情:", emotion_label)
-        else:
-            print("感情分類に失敗しました。")
+        # emotion_label = classify_emotion(temp_wav)
+        # if emotion_label:
+        #     print("推定された感情:", emotion_label)
+        # else:
+        #     print("感情分類に失敗しました。")
 
         # Supabaseに音声認識結果と感情分析結果を登録
         process_sentiment_and_save(temp_wav, text)
