@@ -6,13 +6,259 @@ import tempfile
 from gtts import gTTS
 import speech_recognition as sr
 import time
-
+# from pyAudioAnalysis import audioTrainTest as aT
 
 speech_lock = threading.Lock()
 # 設定情報をconfig.pyからインポート
 from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
 
 
+#########################################
+# ① 音声認識・感情分析関連の関数
+#########################################
+
+def speak(text: str):
+    """テキストをgTTSを用いて読み上げる関数"""
+    with speech_lock:
+        try:
+            tts = gTTS(text=text, lang="ja")
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+                temp_filename = fp.name
+            tts.save(temp_filename)
+            os.system("mpg123 -q " + temp_filename)
+        finally:
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+
+def analyze_sentiment(file_path: str) -> dict:
+    """
+    ダミーの感情分析結果を返す関数です。
+    ※ 実際には、ここで音声ファイル(file_path)を対象にAPI呼び出し等を実施してください。
+    """
+    # 例として、1件のダミーセグメントを返す
+    return {
+        "segments": [
+            {
+                "starttime": 0,
+                "endtime": 3000,
+                "energy": 10,
+                "stress": 20,
+                "confidence": 30
+            }
+        ]
+    }
+
+def process_sentiment_and_save(file_path: str, recognized_text: str) -> None:
+    """
+    指定された音声ファイルに対して感情分析を行い、各指標の平均値を計算して
+    認識結果の全文(recognized_text)とともにSupabaseのsentiment_averagesテーブルへ保存します。
+    """
+    sentiment_result = analyze_sentiment(file_path)
+    segments = sentiment_result.get("segments", [])
+    if not segments:
+        print("感情分析のセグメントが見つかりませんでした。")
+        return
+
+    sums = {}
+    counts = {}
+    for seg in segments:
+        for key, value in seg.items():
+            if key in ("starttime", "endtime"):
+                continue
+            if isinstance(value, (int, float)):
+                sums[key] = sums.get(key, 0) + value
+                counts[key] = counts.get(key, 0) + 1
+    averages = {key: sums[key] / counts[key] for key in sums}
+    print("感情分析の平均値:", averages)
+
+    data = {
+        "user_id": CURRENT_USER_ID,
+        "talk": recognized_text,
+        # 必要に応じて平均値なども保存可能
+        # "energy": averages.get("energy"),
+        # "stress": averages.get("stress"),
+        # "confidence": averages.get("confidence"),
+    }
+    emotions = supabase.table("sentiment_averages").insert(data).execute()
+    print("Supabaseへの登録結果:", emotions)
+
+def get_latest_sentiment_data(user_id: str) -> dict:
+    """
+    指定ユーザーの最新の感情分析レコードをSupabaseから取得する。
+    """
+    res = supabase.table("sentiment_averages") \
+                .select("*") \
+                .eq("user_id", user_id) \
+                .order("created_at", desc=True) \
+                .limit(1) \
+                .execute()
+    data = res.data
+    if data and len(data) > 0:
+        return data[0]
+    else:
+        return {}
+
+def generate_ai_emotions_from_record(record: dict) -> str:
+    """
+    Supabaseに保存された感情分析結果レコード(record)をもとに、
+    簡単な解釈文を生成します。（例：エネルギー、ストレスの傾向など）
+    ※ 必要に応じて内容をカスタマイズしてください。
+    """
+    # ダミーの結果を返す例
+    return "エネルギーは平均的で、ストレスは低い状態です。"
+
+def recognize_speech_from_file(file_path: str) -> str:
+    """
+    録音済みのWAVファイル(file_path)から音声認識を実施し、テキストを返す。
+    """
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(file_path) as source:
+        audio = recognizer.record(source)
+    try:
+        text = recognizer.recognize_google(audio, language="ja-JP")
+        return text
+    except sr.UnknownValueError:
+        print("音声を認識できませんでした。")
+        return ""
+    except sr.RequestError:
+        print("音声認識サービスに接続できませんでした。")
+        return ""
+
+#########################################
+# ② 感情分類関連の関数（pyAudioAnalysis利用）
+#########################################
+
+# モデル名とタイプ（ファイルの存在・パス、拡張子などを確認してください）
+# MODEL_NAME = "mySVMModel"
+# MODEL_TYPE = "svm"
+
+def record_audio(filename, duration=3, sr=16000):
+    """マイクから音声を録音し、WAVファイルとして保存する関数"""
+    print("録音開始...")
+    try:
+        audio = sd.rec(int(duration * sr), samplerate=sr, channels=1)
+        sd.wait()
+        sf.write(filename, audio, sr)
+        print("録音終了")
+    except Exception as e:
+        print("録音中にエラーが発生しました:", e)
+        raise e
+
+def classify_emotion(file_path: str) -> str:
+    """
+    pyAudioAnalysis の file_classification を用いて、ファイルの感情分類を実施する関数。
+    分類結果（感情ラベル）を返します。
+    """
+    try:
+        result, probability, class_names = aT.file_classification(file_path, MODEL_NAME, MODEL_TYPE)
+    except Exception as e:
+        print("分類中にエラーが発生しました:", e)
+        return None
+
+    if not isinstance(class_names, list):
+        print("モデルが見つからないか、分類に失敗しました。")
+        return None
+
+    try:
+        emotion_label = class_names[int(result)]
+        return emotion_label
+    except Exception as e:
+        print("感情ラベルの取得に失敗しました:", e)
+        return None
+
+def get_voice_input(timeout=5):
+    """
+    マイクから音声入力を取得し、Googleの音声認識APIで日本語テキストに変換する関数
+    ※ インターネット接続が必要です。
+    """
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("ご返答をどうぞ（「はい」または「いいえ」）：")
+        try:
+            audio = recognizer.listen(source, timeout=timeout)
+            text = recognizer.recognize_google(audio, language="ja-JP")
+            print("認識結果:", text)
+            return text.lower()
+        except sr.WaitTimeoutError:
+            print("音声入力のタイムアウトが発生しました。")
+            return ""
+        except sr.UnknownValueError:
+            print("音声を認識できませんでした。")
+            return ""
+        except Exception as e:
+            print("音声認識中にエラーが発生しました:", e)
+            return ""
+
+#########################################
+# メイン処理（統合処理）
+#########################################
+
+if __name__ == "__main__":
+    while True:
+        audio_file = "temp_recording.wav"
+        
+        # ①・② 共通の録音処理（1回の録音を利用）
+        try:
+            record_audio(audio_file, duration=3)
+        except Exception:
+            print("録音処理でエラーが発生したため、このループはスキップします。")
+            continue
+
+        # ②：pyAudioAnalysis による感情分類
+        # emotion_label = classify_emotion(audio_file)
+        # if emotion_label is None:
+        #     continue
+        # print("推定された感情:", emotion_label)
+        # # 感情に応じた応答（例）
+        # if emotion_label == "anger":
+        #     response_text = "怒っているね、どうしたの？落ち着いて話してみよう。"
+        # elif emotion_label == "disgust":
+        #     response_text = "嫌がっているね。"
+        # elif emotion_label == "fear":
+        #     response_text = "恐れているね。勇気出して。"
+        # elif emotion_label == "happy":
+        #     response_text = "嬉しそうだね！話を続けて。"
+        # elif emotion_label == "sad":
+        #     response_text = "悲しそう....。話を続けて。"
+        # elif emotion_label == "surprise":
+        #     response_text = "驚いたね！話を続けて。"
+        # else:
+        #     response_text = "未知の感情です。"
+        # print(response_text)
+        # speak(response_text)
+        
+        # ①：録音ファイルから音声認識を実施し、テキストを取得
+        recognized_text = recognize_speech_from_file(audio_file)
+        print("認識結果:", recognized_text)
+        
+        # ①：感情分析＆Supabase登録処理
+        process_sentiment_and_save(audio_file, recognized_text)
+        
+        # # 最新の感情分析レコードからAI解釈結果を取得
+        # record_data = get_latest_sentiment_data(CURRENT_USER_ID)
+        # if record_data:
+        #     ai_emotions = generate_ai_emotions_from_record(record_data)
+        #     print("感情分析の情報:", ai_emotions)
+        #     speak("感情分析の結果は、" + ai_emotions)
+        # else:
+        #     print("感情分析レコードが取得できませんでした。")
+        
+        # ループ継続のため、ユーザーに「はい／いいえ」を音声入力で確認
+        response = get_voice_input(timeout=5)
+        if "はい" in response:
+            print("もう一度試します。")
+            speak("もう一度試します。")
+        else:
+            print("終了します。")
+            speak("終了します。")
+            break
+        
+        time.sleep(1)
+
+
+
+
+#過去分
 # グローバルTTSエンジン（メインスレッドで利用）
 # engine = pyttsx3.init()
 speech_lock = threading.Lock()
@@ -23,21 +269,21 @@ speech_lock = threading.Lock()
 #         engine.say(text)
 #         engine.runAndWait()
 
-def speak(text: str):
-    with speech_lock:
-        try:
-            # gTTSで音声生成（日本語）
-            tts = gTTS(text=text, lang="ja")
-            # 一時的なMP3ファイルを作成
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-                temp_filename = fp.name
-            tts.save(temp_filename)
-            # mpg123で再生（-q は再生中のログを抑制）
-            os.system("mpg123 -q " + temp_filename)
-        finally:
-            # 一時ファイルの削除
-            if os.path.exists(temp_filename):
-                os.remove(temp_filename)
+# def speak(text: str):
+#     with speech_lock:
+#         try:
+#             # gTTSで音声生成（日本語）
+#             tts = gTTS(text=text, lang="ja")
+#             # 一時的なMP3ファイルを作成
+#             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+#                 temp_filename = fp.name
+#             tts.save(temp_filename)
+#             # mpg123で再生（-q は再生中のログを抑制）
+#             os.system("mpg123 -q " + temp_filename)
+#         finally:
+#             # 一時ファイルの削除
+#             if os.path.exists(temp_filename):
+#                 os.remove(temp_filename)
 
 
 
@@ -257,7 +503,7 @@ def recognize_speech(timeout_seconds=120) -> str:
             audio = recognizer.listen(source, timeout=timeout_seconds, phrase_time_limit=timeout_seconds)
         except sr.WaitTimeoutError:
             print("指定時間内に音声が入力されませんでした。")
-            return {"text": text, "ai_emotions": ai_emotions}
+            return {"text": text, "ai_emotions": ai_emotions,"emotion_label": None}
         
     # speech_recognitionのAudioDataオブジェクトからWAVデータを取得し、一時的なWAVファイルに保存
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fp:
@@ -276,6 +522,17 @@ def recognize_speech(timeout_seconds=120) -> str:
         # 感情分析の結果処理と Supabase 登録を実施
         process_sentiment_and_save(temp_wav, text)
 
+        # ここに pyAudioAnalysisの感情分類を追加
+        emotion_label = classify_emotion(temp_wav)
+        if emotion_label:
+            print("推定された感情:", emotion_label)
+        else:
+            print("感情分類に失敗しました。")
+
+        # Supabaseに音声認識結果と感情分析結果を登録
+        process_sentiment_and_save(temp_wav, text)
+
+
         # 最新の感情分析レコードを取得
         record = get_latest_sentiment_data(CURRENT_USER_ID)
         if record:
@@ -283,15 +540,21 @@ def recognize_speech(timeout_seconds=120) -> str:
             print("感情分析の情報:", ai_emotions)
         else:
             print("感情分析レコードが取得できませんでした。")
-        return {"text": text, "ai_emotions": ai_emotions},audio
-    
+        # return {"text": text, "ai_emotions": ai_emotions},audio
+                # 結果を辞書で返す（感情ラベルを含む）
+        return {
+            "text": text,
+            "ai_emotions": ai_emotions,
+            "emotion_label": emotion_label
+        }
+
 
     except sr.UnknownValueError:
         print("音声を認識できませんでした。")
-        return {"text": text, "ai_emotions": ai_emotions}
+        return {"text": text, "ai_emotions": ai_emotions, "emotion_label": None}
     except sr.RequestError:
         print("音声認識サービスに接続できませんでした。")
-        return {"text": text, "ai_emotions": ai_emotions}
+        return {"text": text, "ai_emotions": ai_emotions, "emotion_label": None}
     finally:
         # 作成した一時ファイルを削除
         if os.path.exists(temp_wav):

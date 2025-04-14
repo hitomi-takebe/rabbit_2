@@ -69,17 +69,34 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
     """
     達成率に応じてテンションを変えるメッセージを返す
     """
-    base = f"{scheduled_time} に {title} の時間だよ！"
+    # base = f"{scheduled_time} に {title} の時間だよ！"
+    # if task_rate >= 0.8 and overall_rate >= 0.8:
+    #     return f"今日も絶好調！{base}このタスクの達成率は{task_rate * 100:.0f}％!完了したら『完了したよ』と言ってね。"
+    # elif task_rate >= 0.5 or overall_rate >= 0.5:
+    #     return f"コツコツ続けてるね。{base}このタスクの達成率は{task_rate * 100:.0f}％!完了したら『完了したよ』と言ってね。"
+    # elif task_rate > 0 or overall_rate > 0:
+    #     return f"たまには {title} をやってみよう！応援してるよ。{base}"
+    # else:
+    #     return f"今日は気合を入れて {title} をやってみよう！{base}完了したら『完了したよ』などと言ってね。"
 
-    if task_rate >= 0.8 and overall_rate >= 0.8:
-        return f"今日も絶好調！{base}このタスクの達成率は{task_rate * 100:.0f}％!完了したら『完了したよ』と言ってね。"
-    elif task_rate >= 0.5 or overall_rate >= 0.5:
-        return f"コツコツ続けてるね。{base}このタスクの達成率は{task_rate * 100:.0f}％!完了したら『完了したよ』と言ってね。"
-    elif task_rate > 0 or overall_rate > 0:
-        return f"たまには {title} をやってみよう！応援してるよ。{base}"
-    else:
-        return f"今日は気合を入れて {title} をやってみよう！{base}完了したら『完了したよ』などと言ってね。"
+    """
+    OpenAI にプロンプトを送り、自然なリマインドメッセージを生成する
+    """
+    prompt = f"""
+あなたは、優しくてちょっととぼけたウサギのキャラクターです。
+ユーザーにタスクを思い出させる、自然で押し付けがましくない言い回しを1文で作ってください。
 
+## 条件
+- タスク名: {title}
+- このタスクの直近の達成率: {task_rate:.0%}
+- ユーザー全体の最近の達成率: {overall_rate:.0%}
+
+## 出力形式
+自然な話し言葉の1文のみを返してください。ただしあくまでもタスクをすることを促してください。（例:「そろそろ散歩してみる？気分転換になるかも〜」「ごはん…食べた？いや、夢の中で食べたのかも…」「そろそろおふとんの時間かな？ぼくもう先にゴロンしてるね。」）
+""".strip()
+
+    response = chat_model.invoke(prompt)
+    return response.content.strip()
 
 def confirm_task_completion(input_text: str) -> bool:
     """
