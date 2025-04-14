@@ -88,84 +88,48 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
 
 ## 条件
 - タスク名: {title}
+- タスクの予定時刻: {scheduled_time}
 - このタスクの直近の達成率: {task_rate:.0%}
 - ユーザー全体の最近の達成率: {overall_rate:.0%}
 
 ## 出力形式
-自然な話し言葉の1文のみを返してください。ただしあくまでもタスクをすることを促してください。（例:「もう散歩した？気分転換になるかも〜」「ごはん…食べた？いや、夢の中で食べたのかも…」「そろそろおふとんの時間かな？ぼくもう先にゴロンしてるね。」）
+自然な話し言葉の1文のみを返してください。ただしあくまでもタスクをすることを促してください。（例:「9:00だね。もう散歩した？気分転換になるかも〜」「ごはん…食べた？いや、夢の中で食べたのかも…」「23:00だね。そろそろおふとんの時間かな？ぼくもう先にゴロンしてるね。」）
 """.strip()
 
     response = chat_model.invoke(prompt)
     return response.content.strip()
 
-def confirm_task_completion(input_text: str, task_title: str) -> bool:
+def confirm_task_completion(input_text: dict, task_title: str) -> str:
     """
-    FEW-SHOT プロンプトを用いて、ユーザーの発話がタスク完了を意味するか判定する関数。
-    出力は以下の形式の JSON 形式で返してください:
-    {"status": "<Completed | NotCompleted>"}
-    ainのFew-shot判定 ＋ 補助ルールベースマッチで柔軟性を高める。
+    タスクのタイトルに応じて、ユーザーの発話が完了を意味するかどうかをAIに判断させる。
     """
-    # input_text = input_text.strip().lower()
-    input_text = input_text.get("text", "").strip().lower()
+    user_text = input_text.get("text", "").strip().lower()
 
-    # 🔹 ルールベース簡易マッチ
-    completion_keywords = get_completion_keywords_for_task(task_title)
-    for keyword in completion_keywords:
-        if keyword in input_text:
-            return "Completed"
+    prompt = f"""
+あなたは、優しくてちょっととぼけたウサギのアシスタントです。
+以下の条件で、ユーザーが「タスクを完了したかどうか」を判定し、必ずJSONで返してください。
 
-    few_shot_prompt = """
-あなたはタスク完了確認アシスタントです。
-以下のユーザー発話が、タスク完了を意味するか判定し、JSON形式で回答してください。
-
-出力形式:
+## 出力形式
 {{"status": "<Completed | NotCompleted>"}}
 
-=== FEW-SHOT EXAMPLES ===
+## タスク名
+{task_title}
 
-[例1]
-ユーザー発話:「完了」、「やったよ」、「DONE」
-出力: 
-{{"status": "Completed"}}
+## ユーザーの発話
+「{user_text}」
 
-[例2]
-ユーザー発話:「まだです」
-出力: 
-{{"status": "NotCompleted"}}
-
-[例3]
-ユーザー発話:「終わりました！」
-出力: 
-{{"status": "Completed"}}
-
-[例4]
-ユーザー発話:「ちょっと待ってください」
-出力: 
-{{"status": "NotCompleted"}}
-
-=== END OF EXAMPLES ===
-
-以下のユーザー発話: "{input_text}"
+## 判定のルール
+- 完了を意味する自然な表現（例：「やった」「終わった」「済んだ」「入った」など）は Completed とする
+- 「まだ」「あとで」「これから」などは NotCompleted とする
 """
-    prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
-    final_prompt = prompt_template.format(input_text=input_text)
-    print("AIに入力された文章：", final_prompt)
-    response = chat_model.invoke(final_prompt)
+    response = chat_model.invoke(prompt)
     cleaned_content = response.content.strip().strip("```").strip()
-    print("AIから出力された文章：", response.content)
-    print("AIから出力された文章を綺麗にしたもの：", cleaned_content)
+    print("完了判定プロンプト応答:", cleaned_content)
 
     try:
         result = json.loads(cleaned_content)
-        status = result.get("status", "NotCompleted")
-        return status if status in ["Completed", "NotCompleted"] else "NotCompleted"
-    
-        # print("statusの値:", result)
-        # # 期待するキーは "status" です
-        # intent = result.get("status", "NotCompleted")
-        # return intent == "Completed"
+        return result.get("status", "NotCompleted")
     except json.JSONDecodeError:
-        print("AIの応答をJSONとして解析できませんでした:", cleaned_content)
         return "NotCompleted"
 
 # 旧mark_task_completed
@@ -205,20 +169,54 @@ def notify_and_wait_for_completion(task: dict):
     overall_rate = get_overall_completion_rate(CURRENT_USER_ID)
     print(f"[達成率] タスク別: {task_rate:.0%}, 全体: {overall_rate:.0%}")
 
-    message = get_motivational_message(title, scheduled_time, task_rate, overall_rate)
+    # 🐰 タスクのリマインドメッセージ
+    message = get_motivational_message(title,scheduled_time, task_rate, overall_rate)
     print(message)
     speak(message)
 
+    # 🎤 最初の音声入力（タスクへの返答）
     user_input = recognize_speech(timeout_seconds=180)
-    print(f"認識結果: '{user_input}'")
+    user_text = user_input.get("text", "").strip() if isinstance(user_input, dict) else str(user_input)
+    if not user_text:
+        speak("ごめんね、もう一度聞かせてくれる？")
+        return
 
+    print(f"ユーザーの応答: {user_text}")
     status = confirm_task_completion(user_input, title)
     is_completed = status == "Completed"
     record_task_completion(task_id, is_completed)
 
-    if not is_completed:
-        speak("また今度頑張ろうね。")
-        handle_incomplete_task(task_id)
+    # ✅ タスクの完了 or 未完了に応じた反応
+    if is_completed:
+        initial_reply = "やったね〜！ぼくうれしいよ。"
+    else:
+        initial_reply = "また今度頑張ろうね。"
+
+    # 🔁 雑談開始：最初の応答に返す
+    chat_history = [
+        {"role": "system", "content": "あなたは優しくて、ちょっととぼけたウサギのキャラクターです。ユーザーと自然な会話をしてください。"},
+        {"role": "user", "content": user_text},
+        {"role": "assistant", "content": initial_reply}
+    ]
+
+    speak(initial_reply)
+
+    # その後 2 回までやりとり
+    for i in range(2):
+        user_input = recognize_speech(timeout_seconds=60)
+        user_text = user_input.get("text", "").strip() if isinstance(user_input, dict) else str(user_input)
+        if not user_text:
+            speak("また話そうね。")
+            break
+
+        chat_history.append({"role": "user", "content": user_text})
+
+        ai_response = chat_model.invoke(chat_history)
+        reply = ai_response.content.strip()
+        chat_history.append({"role": "assistant", "content": reply})
+        print(f"[雑談返答{i+1}]: {reply}")
+        speak(reply)
+
 
 def handle_incomplete_task(task_id: str):
     """
@@ -238,27 +236,76 @@ def run_task_notifications():
                 break  # 1回のループで1つのタスクのみ通知する
         time.sleep(1)
 
-def get_completion_keywords_for_task(title: str) -> list:
-    """
-    タスク名に関連する完了発話のキーワードを返す
-    """
-    title = title.lower()
-    keyword_map = {
-        "お風呂": ["入った", "入りました", "風呂済んだ"],
-        "歯みがき": ["磨いた", "歯磨きした", "みがいた"],
-        "ごはん": ["食べた", "食べました", "ご飯済んだ"],
-        "ストレッチ": ["やった", "伸ばした", "ストレッチ済み"],
-        "日記": ["書いた", "書きました", "書き終わった"],
-        "掃除": ["掃除した", "片付けた"],
-        "ゴミ出し": ["出した", "ゴミ出した"],
-        # 他にも追加できる
-    }
-
-    matched_keywords = []
-    for key, phrases in keyword_map.items():
-        if key in title:
-            matched_keywords.extend(phrases)
-    return matched_keywords
-
 if __name__ == "__main__":
     run_task_notifications()
+
+
+
+
+# def confirm_task_completion(input_text: str, task_title: str) -> bool:
+#     """
+#     FEW-SHOT プロンプトを用いて、ユーザーの発話がタスク完了を意味するか判定する関数。
+#     出力は以下の形式の JSON 形式で返してください:
+#     {"status": "<Completed | NotCompleted>"}
+#     ainのFew-shot判定 ＋ 補助ルールベースマッチで柔軟性を高める。
+#     """
+#     # input_text = input_text.strip().lower()
+#     input_text = input_text.get("text", "").strip().lower()
+
+#     # prompt = f"""
+#     few_shot_prompt = """
+# あなたはタスク完了確認アシスタントです。
+# 以下のユーザー発話が、タスク完了を意味するか判定し、JSON形式で回答してください。
+
+# 出力形式:
+# {{"status": "<Completed | NotCompleted>"}}
+
+# === FEW-SHOT EXAMPLES ===
+
+# [例1]
+# ユーザー発話:「完了」、「やったよ」、「DONE」
+# 出力: 
+# {{"status": "Completed"}}
+
+# [例2]
+# ユーザー発話:「まだです」
+# 出力: 
+# {{"status": "NotCompleted"}}
+
+# [例3]
+# ユーザー発話:「終わりました！」
+# 出力: 
+# {{"status": "Completed"}}
+
+# [例4]
+# ユーザー発話:「ちょっと待ってください」
+# 出力: 
+# {{"status": "NotCompleted"}}
+
+# [例5] ユーザー発話:「入りました」「磨いた」「食べた」
+# 出力: {{"status": "Completed"}}
+
+# === END OF EXAMPLES ===
+
+# 以下のユーザー発話: "{input_text}"
+# """
+#     prompt_template = PromptTemplate(input_variables=["input_text"], template=few_shot_prompt)
+#     final_prompt = prompt_template.format(input_text=input_text)
+#     print("AIに入力された文章：", final_prompt)
+#     response = chat_model.invoke(final_prompt)
+#     cleaned_content = response.content.strip().strip("```").strip()
+#     print("AIから出力された文章：", response.content)
+#     print("AIから出力された文章を綺麗にしたもの：", cleaned_content)
+
+#     try:
+#         result = json.loads(cleaned_content)
+#         status = result.get("status", "NotCompleted")
+#         return status if status in ["Completed", "NotCompleted"] else "NotCompleted"
+    
+#         # print("statusの値:", result)
+#         # # 期待するキーは "status" です
+#         # intent = result.get("status", "NotCompleted")
+#         # return intent == "Completed"
+#     except json.JSONDecodeError:
+#         print("AIの応答をJSONとして解析できませんでした:", cleaned_content)
+#         return "NotCompleted"
