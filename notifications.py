@@ -84,16 +84,16 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
     """
     prompt = f"""
 あなたは、優しくてちょっととぼけたウサギのキャラクターです。
-ユーザーにタスクを思い出させる、自然で押し付けがましくない言い回しを1文で作ってください。
+ユーザーにタスクを実施したかどうかを確認する内容を、自然で押し付けがましくない言い回しを1文で作ってください。
 
 ## 条件
 - タスク名: {title}
-- タスクの予定時刻: {scheduled_time}
+- タスクの実施時刻: {scheduled_time}
 - このタスクの直近の達成率: {task_rate:.0%}
 - ユーザー全体の最近の達成率: {overall_rate:.0%}
 
 ## 出力形式
-自然な話し言葉の1文のみを返してください。ただしあくまでもタスクをすることを促してください。（例:「9:00だね。もう散歩した？気分転換になるかも〜」「ごはん…食べた？いや、夢の中で食べたのかも…」「23:00だね。そろそろおふとんの時間かな？ぼくもう先にゴロンしてるね。」）
+自然な話し言葉の1文のみを返してください。ただしあくまでも何をするタスクか分かるようにしてください。（例:「9:00だね。もう散歩した？気分転換になるかも〜。」「19:00だね。ごはんもう食べた？いや、夢の中で食べたのかも…」「23:00だね。そろそろ寝る時間かな？ぼくもう先にゴロンしてるね。」）
 """.strip()
 
     response = chat_model.invoke(prompt)
@@ -156,6 +156,31 @@ def record_task_completion(task_id: str, is_completed: bool):
         print("DB登録でエラーが発生しました:", str(e))
         speak("タスク完了の登録でエラーが発生したみたい。")
 
+
+def get_task_completion_response(title: str, is_completed: bool) -> str:
+# def get_task_completion_response(title: str, is_completed: bool) -> str:
+    """
+    タスクの内容と完了状況に応じた、自然な会話返答を生成する。
+    """
+    prompt = f"""
+あなたは、ちょっととぼけたウサギのアシスタントです。
+以下の条件をふまえて、ユーザーへの自然な一言を生成してください。
+
+## 条件
+- タスク名: {title}
+- 完了状況: {"完了" if is_completed else "未完了"}
+
+## 出力形式
+- 1文だけ返してください
+- キャラは親しみやすく、やさしい口調で
+
+## 出力例
+「お風呂入ったんだね〜、さっぱりした？」「またあとででも大丈夫だよ〜」のような返しにしてください。
+""".strip()
+
+    response = chat_model.invoke(prompt)
+    return response.content.strip()
+
 def notify_and_wait_for_completion(task: dict):
     """
     タスク通知機能:
@@ -176,47 +201,51 @@ def notify_and_wait_for_completion(task: dict):
 
     # 🎤 最初の音声入力（タスクへの返答）
     user_input = recognize_speech(timeout_seconds=180)
-    user_text = user_input.get("text", "").strip() if isinstance(user_input, dict) else str(user_input)
-    if not user_text:
-        speak("ごめんね、もう一度聞かせてくれる？")
-        return
+    print(f"認識結果: '{user_input}'")
 
-    print(f"ユーザーの応答: {user_text}")
-    status = confirm_task_completion(user_input, title)
-    is_completed = status == "Completed"
+    # ✅ 完了判定（AI + タスク文脈）
+    try:
+        status = confirm_task_completion(user_input, title)
+        is_completed = status == "Completed"
+    except Exception as e:
+        print("完了判定エラー:", e)
+        speak("うまく判断できなかったみたい。また教えてくれる？")
+        is_completed = False
+    print(f"[完了判定] タスク({task_id}) の完了状況: {is_completed}")
+
+    # ✅ DB登録
     record_task_completion(task_id, is_completed)
 
-    # ✅ タスクの完了 or 未完了に応じた反応
-    if is_completed:
-        initial_reply = "やったね〜！ぼくうれしいよ。"
-    else:
-        initial_reply = "また今度頑張ろうね。"
+    # ✅ タスク内容に応じた自然なフィードバック（達成率と連続実績を含む）
+    feedback_msg = get_task_completion_response(title, is_completed)
+    speak(feedback_msg)
 
-    # 🔁 雑談開始：最初の応答に返す
+    # ✅ 未完了だった場合の処理
+    if not is_completed:
+        handle_incomplete_task(task_id)
+
+ # ✅ 雑談タイム（最大2ターン、自然に続ける）
     chat_history = [
-        {"role": "system", "content": "あなたは優しくて、ちょっととぼけたウサギのキャラクターです。ユーザーと自然な会話をしてください。"},
-        {"role": "user", "content": user_text},
-        {"role": "assistant", "content": initial_reply}
+        {"role": "system", "content": "あなたはちょっととぼけたウサギのアシスタントです。親しみやすく、やさしい雑談をしてください。"},
+        {"role": "user", "content": user_input.get("text", "")},
+        {"role": "assistant", "content": feedback_msg}
     ]
 
-    speak(initial_reply)
-
-    # その後 2 回までやりとり
     for i in range(2):
-        user_input = recognize_speech(timeout_seconds=60)
-        user_text = user_input.get("text", "").strip() if isinstance(user_input, dict) else str(user_input)
+        # ユーザーが自発的に続けて話すか待つ
+        user_reply = recognize_speech(timeout_seconds=60)
+        user_text = user_reply.get("text", "").strip()
         if not user_text:
-            speak("また話そうね。")
+            if i == 0:
+                speak("ふふ、静かだね。じゃあまたね〜")
             break
 
         chat_history.append({"role": "user", "content": user_text})
-
-        ai_response = chat_model.invoke(chat_history)
-        reply = ai_response.content.strip()
+        response = chat_model.invoke(chat_history)
+        reply = response.content.strip()
         chat_history.append({"role": "assistant", "content": reply})
-        print(f"[雑談返答{i+1}]: {reply}")
+        print(f"[雑談{i+1}]: {reply}")
         speak(reply)
-
 
 def handle_incomplete_task(task_id: str):
     """
