@@ -495,8 +495,8 @@ def recognize_speech(timeout_seconds=120) -> str:
     print(f"音声入力を待機しています... 最大{timeout_seconds}秒")
     recognizer = sr.Recognizer()
     text = ""           # ここで初期化する
-    ai_emotions = ""
-    emotion_label = ""
+    ai_emotions = "none"
+    emotion_label = "none"
 
     with sr.Microphone() as source:
         recognizer.adjust_for_ambient_noise(source)

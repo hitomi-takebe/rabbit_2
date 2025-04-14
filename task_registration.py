@@ -91,7 +91,7 @@ def insert_task():
         # タスク詳細の入力
         text_for_task = recognize_speech(timeout_seconds=120)
         if not text_for_task:
-            speak("うまく聞き取れませんでした。もう一度話してください。")
+            speak("うまく聞き取れなかったよ。もう一度話してね。")
             continue
 
         # タスク情報の抽出
@@ -99,19 +99,19 @@ def insert_task():
         
         # 抽出結果そのものが取得できなかった場合
         if not task_info:
-            speak("入力内容からタスク情報を抽出できませんでした。もう一度言ってください。")
+            speak("入力内容からタスク情報を抽出できなかったよ。もう一度話してね。")
             print("抽出結果:", task_info)
             continue
         
         # タスクのタイトルが取得できなかった場合
         if not task_info.get("title"):
-            speak("タスクのタイトルが見つかりませんでした。タスクの内容をもう一度、はっきりと話してください。")
+            speak("タスクのタイトルが見つからなかったよ。タスクの内容をもう一度、はっきりと話してね。")
             print("抽出結果:", task_info)
             continue
         
         # タスクの実行時刻が取得できなかった場合
         if not task_info.get("scheduled_time"):
-            speak("タスクの実行時刻が見つかりませんでした。必ず時刻を含めて、もう一度言ってください。")
+            speak("タスクの実行時刻が見つからなかったよ。時刻を含めて、もう一度話してね。")
             print("抽出結果:", task_info)
             continue
             # 全ての情報が取得できたらループを抜ける
@@ -124,16 +124,16 @@ def insert_task():
 
     # 最終確認：内容を「{scheduled_time} に {title} する」で確認
     while True:
-        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録して良いですか？「そうです」または「やり直す」で答えてください。")
+        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録しても良い？「そうです」または「やり直す」で答えてね。")
         confirmation_raw = recognize_speech(timeout_seconds=30)
         confirmation = classify_confirmation(confirmation_raw)
         if confirmation == "No":
-            speak("了解しました。もう一度、最初からやり直します。")
+            speak("了解！もう一度、最初からやり直すね。")
             return insert_task()  # 再帰的に再入力
         elif confirmation == "Yes":
             break
         else:
-            speak("確認が取れなかったので、もう一度お答えください。")
+            speak("確認が取れなかったから、もう一度答えてね。")
 
     # ループを抜けた時点で、title と scheduled_time は正しく取得されているはず
     data = {
@@ -146,10 +146,10 @@ def insert_task():
         res = supabase.table("tasks").insert(data).execute()
         if res.data:
             print("タスクを登録しました:", res.data)
-            speak("タスクを登録しました。ありがとうございます。")
+            speak("タスクを登録したよ。応援してるね。")
         else:
             print("タスク登録に失敗:", res)
-            speak("タスク登録に失敗しました。")
+            speak("タスク登録に失敗したみたい。")
     except Exception as e:
         print("DB処理でエラー:", e)
-        speak("タスク登録中にエラーが発生しました。")
+        speak("タスク登録中にエラーが発生しちゃった。")

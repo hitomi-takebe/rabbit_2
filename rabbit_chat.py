@@ -1,38 +1,3 @@
-# # rabbit_chat.py
-# from audio import speak, recognize_speech
-# # 設定情報をconfig.pyからインポート
-# from config import OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
-
-
-# # def rabbit_chat():
-# #     """
-# #     rabbit風雑談機能:
-# #     ユーザーから雑談の発話があった場合に、簡単な応答を返す。
-# #     """
-# #     speak("会話モードです。何かお話ししますか？")
-# #     user_input = recognize_speech(timeout_seconds=15)
-# #     if user_input:
-# #         speak("なるほど、勉強になります！")
-# #     else:
-# #         speak("何も聞こえませんでした。")
-# #     # 関数が終了すると、自動的に呼び出し元に戻ります。
-# #     return
-
-# def rabbit_chat():
-#     """
-#     rabbit風雑談機能:
-#     ユーザーから雑談の発話があった場合に、簡単な応答を返す。
-#     """
-#     speak("会話モードです。何かお話ししますか？")
-#     user_input = recognize_speech(timeout_seconds=15)
-#     if user_input:
-#         speak("なるほど、勉強になります！")
-#     else:
-#         speak("何も聞こえませんでした。")
-#     # 関数が終了すると、自動的に呼び出し元に戻ります。
-#     return
-
-
 from audio import recognize_speech, speak
 from config import chat_model
 from typing import List, Dict, Tuple
@@ -40,7 +5,7 @@ import time
 
 # ChatGPTの初期設定（人格設定）
 system_settings = """
-あなたはとてもやさしく、話し相手として最高の友人です。相手の気持ちの前提は話さず、5秒から10秒の会話をしてください。
+あなたは、ちょっととぼけたウサギのキャラクターです。相手の気持ちの前提は話さず、5秒の会話をしてください。
 """
 
 # ChatGPTとの会話処理
@@ -75,7 +40,7 @@ def rabbit_chat():
 
     while True:
         if first_time:
-            speak("会話モードです。何かお話ししますか？")
+            speak("ラビットだよ。一緒に話そう。")
             first_time = False
 
         recog_result = recognize_speech()
@@ -83,13 +48,13 @@ def rabbit_chat():
         ai_emotions = recog_result["ai_emotions"]
 
         if recog_text.strip() == "":
-            speak("ごめんなさい、うまく聞き取れませんでした。もう一度お願いします。")
+            speak("うまく聞き取れなかったよ。会話を終了する？")
             continue
 
         print("ユーザー：", recog_text)
 
         if should_end_conversation(recog_text):
-            speak("会話を終了します。また話しましょう。")
+            speak("会話を終了します。また話そうね。")
             time.sleep(1.5)  # ← これで確実に喋る時間を確保
             break
 

@@ -92,18 +92,28 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
 - ユーザー全体の最近の達成率: {overall_rate:.0%}
 
 ## 出力形式
-自然な話し言葉の1文のみを返してください。ただしあくまでもタスクをすることを促してください。（例:「そろそろ散歩してみる？気分転換になるかも〜」「ごはん…食べた？いや、夢の中で食べたのかも…」「そろそろおふとんの時間かな？ぼくもう先にゴロンしてるね。」）
+自然な話し言葉の1文のみを返してください。ただしあくまでもタスクをすることを促してください。（例:「もう散歩した？気分転換になるかも〜」「ごはん…食べた？いや、夢の中で食べたのかも…」「そろそろおふとんの時間かな？ぼくもう先にゴロンしてるね。」）
 """.strip()
 
     response = chat_model.invoke(prompt)
     return response.content.strip()
 
-def confirm_task_completion(input_text: str) -> bool:
+def confirm_task_completion(input_text: str, task_title: str) -> bool:
     """
     FEW-SHOT プロンプトを用いて、ユーザーの発話がタスク完了を意味するか判定する関数。
     出力は以下の形式の JSON 形式で返してください:
     {"status": "<Completed | NotCompleted>"}
+    ainのFew-shot判定 ＋ 補助ルールベースマッチで柔軟性を高める。
     """
+    # input_text = input_text.strip().lower()
+    input_text = input_text.get("text", "").strip().lower()
+
+    # 🔹 ルールベース簡易マッチ
+    completion_keywords = get_completion_keywords_for_task(task_title)
+    for keyword in completion_keywords:
+        if keyword in input_text:
+            return "Completed"
+
     few_shot_prompt = """
 あなたはタスク完了確認アシスタントです。
 以下のユーザー発話が、タスク完了を意味するか判定し、JSON形式で回答してください。
@@ -173,14 +183,14 @@ def record_task_completion(task_id: str, is_completed: bool):
     try:
         response = supabase.table("task_completions").insert(data).execute()
         if response.data:
-            print(f"[DB] タスク({task_id}) を記録しました（完了: {is_completed}）")
-            speak("完了登録しました。" if is_completed else "未完了として記録しました。")
+            print(f"[DB] タスク({task_id}) を記録したよ（完了: {is_completed}）")
+            speak("完了登録したよ。" if is_completed else "未完了として記録したよ。")
         else:
             print("[DB] 登録に失敗:", response)
-            speak("タスクの登録に失敗しました。")
+            speak("タスクの登録に失敗しちゃった。")
     except Exception as e:
         print("DB登録でエラーが発生しました:", str(e))
-        speak("タスク完了の登録でエラーが発生しました。")
+        speak("タスク完了の登録でエラーが発生したみたい。")
 
 def notify_and_wait_for_completion(task: dict):
     """
@@ -202,7 +212,7 @@ def notify_and_wait_for_completion(task: dict):
     user_input = recognize_speech(timeout_seconds=180)
     print(f"認識結果: '{user_input}'")
 
-    status = confirm_task_completion(user_input)
+    status = confirm_task_completion(user_input, title)
     is_completed = status == "Completed"
     record_task_completion(task_id, is_completed)
 
@@ -227,6 +237,28 @@ def run_task_notifications():
                 notify_and_wait_for_completion(task)
                 break  # 1回のループで1つのタスクのみ通知する
         time.sleep(1)
+
+def get_completion_keywords_for_task(title: str) -> list:
+    """
+    タスク名に関連する完了発話のキーワードを返す
+    """
+    title = title.lower()
+    keyword_map = {
+        "お風呂": ["入った", "入りました", "風呂済んだ"],
+        "歯みがき": ["磨いた", "歯磨きした", "みがいた"],
+        "ごはん": ["食べた", "食べました", "ご飯済んだ"],
+        "ストレッチ": ["やった", "伸ばした", "ストレッチ済み"],
+        "日記": ["書いた", "書きました", "書き終わった"],
+        "掃除": ["掃除した", "片付けた"],
+        "ゴミ出し": ["出した", "ゴミ出した"],
+        # 他にも追加できる
+    }
+
+    matched_keywords = []
+    for key, phrases in keyword_map.items():
+        if key in title:
+            matched_keywords.extend(phrases)
+    return matched_keywords
 
 if __name__ == "__main__":
     run_task_notifications()
