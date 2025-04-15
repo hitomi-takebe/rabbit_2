@@ -86,7 +86,7 @@ def insert_task():
     なお、抽出結果が不十分な場合は、個別に再入力させる。
     最終確認で「やり直し」と言われた場合も、再入力を促す。
     """
-    speak("タスクの詳細を話してください。（例:『17時15分にお風呂に入る』など）")
+    speak("タスクの時間と内容を話してね。")
     while True:
         # タスク詳細の入力
         text_for_task = recognize_speech(timeout_seconds=120)
@@ -124,7 +124,7 @@ def insert_task():
 
     # 最終確認：内容を「{scheduled_time} に {title} する」で確認
     while True:
-        speak(f"確認します。毎日 {scheduled_time} に {title}  で登録しても良い？「そうです」または「やり直す」で答えてね。")
+        speak(f"確認するね。毎日 {scheduled_time} に {title}  で登録しても良いかな。「そうです」または「やり直す」で答えてね。")
         confirmation_raw = recognize_speech(timeout_seconds=30)
         confirmation = classify_confirmation(confirmation_raw)
         if confirmation == "No":
