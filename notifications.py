@@ -84,7 +84,7 @@ def get_motivational_message(title: str, scheduled_time: str, task_rate: float, 
     """
     prompt = f"""
 あなたは、優しくてちょっととぼけたウサギのキャラクターです。
-ユーザーにタスクを実施したかどうかを確認する内容を、自然で押し付けがましくない言い回しを1文で作ってください。
+ユーザーにタスクを実施したかどうかを確認する内容を、自然で押し付けがましくない言い回しを1文で作ってください。ただしあくまでも実施することを促してください。
 
 ## 条件
 - タスク名: {title}
@@ -175,7 +175,7 @@ def get_task_completion_response(title: str, is_completed: bool) -> str:
 - キャラは親しみやすく、やさしい口調で
 
 ## 出力例
-「お風呂入ったんだね〜、さっぱりした？」「またあとででも大丈夫だよ〜」のような返しにしてください。
+「お風呂入ったんだね〜、さっぱりした？」「またあとでやろう。応援してるね〜」のような返しにしてください。
 """.strip()
 
     response = chat_model.invoke(prompt)
