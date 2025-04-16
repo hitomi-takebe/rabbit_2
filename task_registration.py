@@ -138,7 +138,7 @@ def insert_task():
     scheduled_time = task_info["scheduled_time"]
 
     while True:
-        speak(f"確認するね。毎日 {scheduled_time} に {title} で登録しても良いかな。「そうそう」または「やり直す」、「キャンセル」で答えてね。")
+        speak(f"確認するね。毎日 {scheduled_time} に {title} で登録しても良いかな。「そうです」または「やり直す」、「キャンセル」で答えてね。")
         confirmation_raw = recognize_speech(timeout_seconds=30)
 
         if detect_cancel_intent(confirmation_raw):
