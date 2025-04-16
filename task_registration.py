@@ -1,46 +1,59 @@
-# task_registration.py
 import json
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from audio import speak, recognize_speech
 from config import CURRENT_USER_ID, supabase
-# 設定情報をconfig.pyからインポート
 from config import chat_model, SUPABASE_URL, SUPABASE_KEY, CURRENT_USER_ID, supabase
-#タスクの登録機能ができるようになっていないです
+
+
+def detect_cancel_intent(input_text: str) -> bool:
+    """
+    ユーザーの発話に「キャンセル」「やめる」などの中断意図が含まれていればTrueを返す
+    """
+    cancel_keywords = ["やめる", "キャンセル", "登録しない", "終了", "ストップ", "中止", "またあとで"]
+    return any(kw in input_text for kw in cancel_keywords)
 
 
 def extract_task_info(input_text: str) -> dict:
-    """
-    タスクの記述文から、タスクタイトルと予定時刻（HH:MM:SS）を抽出する。
-    例:
-    {
-    "title": "お風呂に入る",
-      "scheduled_time": "21:00:00"  // 時刻がなければ null
-    }
-    """
+    if detect_cancel_intent(input_text):
+        return {
+            "title": None,
+            "scheduled_time": None,
+            "intent": "cancel"
+        }
+
     prompt = PromptTemplate(
         input_variables=["input_text"],
         template="""
-あなたはタスクの記述文から、タスクのタイトルと予定時刻（24時間表記のHH:MM:SS）を抽出するアシスタントです。
-以下の文章: 「{input_text}」
-から、
+あなたは、ユーザーの発話から「タスク登録の意図があるか」「キャンセルの意図があるか」を判定し、
+意図(intent)・タスクタイトル(title)・実行時刻(scheduled_time) を抽出してください。
+
+出力は以下のJSON形式にしてください：
+
 {{
-    "title": "<タスク名>",
-    "scheduled_time": "<HH:MM:SS または null>"
+  "title": "<タスク名 または null>",
+  "scheduled_time": "<HH:MM:SS または null>",
+  "intent": "<register または cancel>"
 }}
-の形式のJSONのみを出力してください。
-もし時刻が含まれていなければ "scheduled_time": null としてください。
+
+入力: 「{input_text}」
 """
     )
+
     final_prompt = prompt.format(input_text=input_text)
     response = chat_model.invoke(final_prompt)
+
     try:
         task_info = json.loads(response.content.strip("`"))
+        if task_info.get("intent") == "cancel":
+            task_info["title"] = None
+            task_info["scheduled_time"] = None
         return task_info
     except (json.JSONDecodeError, AttributeError) as e:
         print("タスク情報のJSON解析に失敗:", e)
         print("レスポンス:", response.content)
         return {}
+
 
 def classify_confirmation(response_text: str) -> str:
     """
@@ -50,6 +63,9 @@ def classify_confirmation(response_text: str) -> str:
     "confirmation": "<Yes | No>"
     }
     """
+    if detect_cancel_intent(response_text):
+        return "No"
+
     prompt = """
 あなたは、以下のユーザーの応答を解析し、それが確認の「イエス」か「ノー」かを判定してください。
 出力は必ず次の JSON 形式で返してください：
@@ -78,68 +94,70 @@ Output: {{"confirmation": "No"}}
         print("確認応答の解析エラー:", e)
         return "No"
 
-    
+
 def insert_task():
     """
     タスク登録機能:
     ユーザーにタスク詳細を音声で尋ね、内容を抽出して DB に登録する。
     なお、抽出結果が不十分な場合は、個別に再入力させる。
-    最終確認で「やり直し」と言われた場合も、再入力を促す。
+    最終確認で「やり直し」や「キャンセル」と言われた場合は再入力や中断。
     """
     speak("タスクの時間と内容を話してね。")
     while True:
-        # タスク詳細の入力
         text_for_task = recognize_speech(timeout_seconds=120)
         if not text_for_task:
             speak("うまく聞き取れなかったよ。もう一度話してね。")
             continue
 
-        # タスク情報の抽出
+        if detect_cancel_intent(text_for_task):
+            speak("わかったよ。タスクの登録をやめるね。")
+            return
+
         task_info = extract_task_info(text_for_task)
-        
-        # 抽出結果そのものが取得できなかった場合
+
+        # intentがキャンセルなら終了
+        if task_info.get("intent") == "cancel":
+            speak("了解だよ。タスク登録はやめておくね。")
+            return
+
         if not task_info:
             speak("入力内容からタスク情報を抽出できなかったよ。もう一度話してね。")
-            print("抽出結果:", task_info)
             continue
-        
-        # タスクのタイトルが取得できなかった場合
+
         if not task_info.get("title"):
-            speak("タスクのタイトルが見つからなかったよ。タスクの内容をもう一度、はっきりと話してね。")
-            print("抽出結果:", task_info)
+            speak("タスクのタイトルが見つからなかったよ。もう一度話してね。")
             continue
-        
-        # タスクの実行時刻が取得できなかった場合
+
         if not task_info.get("scheduled_time"):
             speak("タスクの実行時刻が見つからなかったよ。時刻を含めて、もう一度話してね。")
-            print("抽出結果:", task_info)
             continue
-            # 全ての情報が取得できたらループを抜ける
-        break   
 
-    # 取得した情報を変数に格納
+        break
+
     title = task_info["title"]
     scheduled_time = task_info["scheduled_time"]
-    
 
-    # 最終確認：内容を「{scheduled_time} に {title} する」で確認
     while True:
-        speak(f"確認するね。毎日 {scheduled_time} に {title}  で登録しても良いかな。「そうです」または「やり直す」で答えてね。")
+        speak(f"確認するね。毎日 {scheduled_time} に {title} で登録しても良いかな。「そうそう」または「やり直す」、「キャンセル」で答えてね。")
         confirmation_raw = recognize_speech(timeout_seconds=30)
+
+        if detect_cancel_intent(confirmation_raw):
+            speak("了解だよ。タスクの登録をやめておくね。")
+            return
+
         confirmation = classify_confirmation(confirmation_raw)
         if confirmation == "No":
             speak("了解！もう一度、最初からやり直すね。")
-            return insert_task()  # 再帰的に再入力
+            return insert_task()
         elif confirmation == "Yes":
             break
         else:
             speak("確認が取れなかったから、もう一度答えてね。")
 
-    # ループを抜けた時点で、title と scheduled_time は正しく取得されているはず
     data = {
         "user_id": CURRENT_USER_ID,
         "title": title,
-        "recurrence": "everyday",  # 毎日タスクの例
+        "recurrence": "everyday",
         "scheduled_time": scheduled_time
     }
     try:
