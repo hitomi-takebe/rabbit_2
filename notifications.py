@@ -176,7 +176,7 @@ def get_task_completion_response(title: str, is_completed: bool) -> str:
 - タスクをやることは促すが、強制しない
 
 ## 出力例
-「お風呂入ったんだね〜、さっぱりした？」「またあとでやろう。応援してるね〜」のような返しにしてください。
+完了した時は「お風呂入ったんだね〜、さっぱりした？」完了してない時は「またあとでやろう。応援してるね〜」のような返しにしてください。
 """.strip()
 
     response = chat_model.invoke(prompt)
